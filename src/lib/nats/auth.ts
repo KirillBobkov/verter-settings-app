@@ -28,12 +28,16 @@ export function forgetCreds(): void {
  * из исходного файла отбрасываются.
  */
 export function sanitizeCreds(creds: string): string | null {
-  const jwt = creds.match(/BEGIN NATS USER JWT-+\s*([A-Za-z0-9_.-]+)\s*-+END/)?.[1] ?? ''
-  const seed = creds.match(/^SU[A-Za-z0-9]{56}$/m)?.[0] ?? ''
-  if (!jwt || !seed) return null
+  // классы символов включают \s: значения, разорванные переносами строк, склеятся
+  const jwt =
+    creds.match(/BEGIN NATS USER JWT-+\s*([A-Za-z0-9_.\s-]+?)\s*-+\s*END/)?.[1]?.replace(/\s+/g, '') ?? ''
+  const seed =
+    creds.match(/USER NKEY SEED-+\s*([A-Za-z0-9\s]+?)\s*-+\s*END/)?.[1]?.replace(/\s+/g, '') ?? ''
+  if (!/^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(jwt)) return null
+  if (!/^SU[A-Za-z0-9]{56}$/.test(seed)) return null
   return [
     '-----BEGIN NATS USER JWT-----',
-    jwt.replace(/\s+/g, ''),
+    jwt,
     '------END NATS USER JWT------',
     '',
     '-----BEGIN USER NKEY SEED-----',
