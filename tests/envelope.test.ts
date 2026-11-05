@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { makeEnvelope } from '../src/lib/nats/envelope'
 import { feedFromStatusReply, resetClock } from '../src/lib/nats/clock'
 import { credsLooksValid, decodeJwtExp } from '../src/lib/nats/auth'
@@ -9,6 +9,7 @@ function b64url(o: object): string {
 
 describe('makeEnvelope (контракт NATS_CONTRACTS_V1)', () => {
   beforeEach(() => resetClock())
+  afterEach(() => vi.restoreAllMocks())
 
   it('без синхронизации часов конверт не создаётся', () => {
     expect(() => makeEnvelope(1, {})).toThrow('Нет синхронизации')
@@ -16,6 +17,7 @@ describe('makeEnvelope (контракт NATS_CONTRACTS_V1)', () => {
 
   it('issued_at из серверных часов, целое; v=1; ttl как задан', () => {
     feedFromStatusReply(1790856000.0, 100, 200)
+    vi.spyOn(performance, 'now').mockReturnValue(250) // +50 мс к midpoint → serverNow = ...000.05
     const env = makeEnvelope(1, { session_id: 'x', seq: 1, linear_x: 0, angular_z: 0 })
     expect(env.v).toBe(1)
     expect(env.issued_at).toBe(1790856000)
