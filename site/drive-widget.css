@@ -1,0 +1,127 @@
+.drive-widget {
+    flex: 0 0 340px;
+    width: 340px;
+    max-width: 100%;
+    color: #e4edf7;
+}
+.drive-widget #drive-panel {
+    display: grid;
+    grid-template-columns: 142px 1fr;
+    gap: 12px;
+    padding: 8px;
+    margin: 0;
+    background: #172334;
+    border: 1px solid #41546b;
+    border-radius: 10px;
+    outline: none;
+}
+.drive-widget #drive-panel:focus-within {
+    border-color: #55e6c1;
+    box-shadow: 0 0 0 2px #55e6c144;
+}
+.drive-widget .widget-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 44px);
+    grid-template-rows: repeat(3, 36px);
+    gap: 4px;
+    align-self: center;
+}
+.drive-widget button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 36px;
+    min-width: 0;
+    min-height: 0;
+    padding: 1px;
+    margin: 0;
+    border: 1px solid #57718d;
+    border-radius: 5px;
+    background: #26374b;
+    color: #e4edf7;
+    font-size: 16px;
+    line-height: 16px;
+    cursor: pointer;
+}
+.drive-widget button span {
+    font-size: 8px;
+    line-height: 11px;
+    white-space: nowrap;
+}
+.drive-widget button:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+.drive-widget button.moving {
+    background: #155c4c;
+    border-color: #55e6c1;
+}
+.drive-widget button:focus-visible {
+    outline: 2px solid #55e6c1;
+    outline-offset: 1px;
+}
+.drive-widget .widget-forward {
+    grid-area: 1 / 2;
+}
+.drive-widget .widget-left {
+    grid-area: 2 / 1;
+}
+.drive-widget .widget-stop {
+    grid-area: 2 / 2;
+    background: #59323b;
+    border-color: #b26776;
+}
+.drive-widget .widget-right {
+    grid-area: 2 / 3;
+}
+.drive-widget .widget-backward {
+    grid-area: 3 / 2;
+}
+.drive-widget .widget-info {
+    font-size: 10px;
+    min-width: 0;
+    align-self: center;
+}
+.drive-widget .widget-info strong {
+    font-size: 12px;
+}
+.drive-widget .widget-info p {
+    margin: 4px 0 0;
+    font-size: 10px;
+    line-height: 1.25;
+}
+.drive-widget #drive-keyboard-help {
+    color: #92b3d4;
+}
+.drive-widget #drive-command-result:empty {
+    display: none;
+}
+.drive-widget .stale {
+    color: #ffafaf;
+}
+.drive-widget .widget-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+}
+.sensor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+@media (max-width: 680px) {
+    .drive-widget {
+        flex-basis: 340px;
+        margin-inline: auto;
+    }
+    .sensor-header {
+        align-items: flex-start;
+    }
+}

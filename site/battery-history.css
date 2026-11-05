@@ -1,0 +1,23 @@
+:root { color-scheme: dark; font-family: system-ui, sans-serif; background: #101822; color: #e4edf4; }
+body { margin: 0; }
+main { max-width: 1480px; margin: 28px auto; padding: 0 20px; }
+small { color: #6ee7c0; letter-spacing: .15em; }
+h1 { margin-bottom: 24px; }
+h2 { font-size: 17px; margin: 0 0 12px; }
+p { color: #adc0d2; font-size: 13px; line-height: 1.5; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
+button, select { font: inherit; color: inherit; background: #263a4d; border: 1px solid #62758a; border-radius: 6px; padding: 8px 12px; }
+button { cursor: pointer; }
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 410px), 1fr)); gap: 18px; }
+.chart, .mode-card { min-width: 0; padding: 18px; border: 1px solid #354455; border-radius: 12px; background: #182432; }
+.mode-card { margin: 22px 0; }
+canvas { display: block; width: 100%; height: 180px; touch-action: pan-y; }
+#modes { height: 100px; margin-top: 14px; }
+.legend { display: flex; flex-wrap: wrap; gap: 18px; font-size: 13px; }
+.charging { color: #63e6be; }
+.discharging { color: #ffb866; }
+.idle { color: #7eaaff; }
+.unknown { color: #8290a2; }
+.detail { min-height: 38px; margin-bottom: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.stale { color: #ffb6b6; }
+#soc-summary { font-size: 24px; font-weight: 650; color: #63e6be; }

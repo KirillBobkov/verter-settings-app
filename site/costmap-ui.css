@@ -1,0 +1,24 @@
+.costmap-panel { margin: 0 0 14px; padding: 12px 14px; background: #182432; border: 1px solid #35475d; border-radius: 10px; }
+.costmap-panel h2 { margin: 0 0 10px; font-size: 16px; }
+.costmap-controls { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; }
+.costmap-controls label { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; }
+.costmap-controls input[type="checkbox"] { width: 16px; height: 16px; margin: 0; }
+.costmap-controls input[type="range"] { width: 120px; max-width: 30vw; }
+.costmap-opacity output { min-width: 34px; color: #afc1d6; }
+.costmap-legend { display: flex; flex-wrap: wrap; gap: 7px 16px; margin-top: 11px; color: #afc1d6; font-size: 12px; }
+.costmap-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.costmap-swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+.costmap-swatch-obstacle { background: #ff4657; }
+.costmap-swatch-inscribed { background: #ff8a48; }
+.costmap-swatch-inflation { background: #ffd166; }
+.costmap-statuses { display: flex; flex-wrap: wrap; gap: 4px 22px; margin-top: 7px; }
+.costmap-panel p { margin: 4px 0 0; overflow-wrap: anywhere; }
+.costmap-panel .costmap-error { color: #ffb2ae; }
+#costmap-summary { color: #93adc7; font-size: 12px; }
+@media (max-width: 650px) {
+    .costmap-panel { padding: 11px; }
+    .costmap-controls { gap: 12px 16px; }
+    .costmap-opacity { flex-basis: 100%; }
+    .costmap-controls input[type="range"] { width: 150px; max-width: 42vw; }
+    .costmap-statuses { display: block; }
+}

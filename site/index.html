@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Verter · Состояние робота</title>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <main>
+            <header class="page-header">
+                <div>
+                    <small>VERTER / КОНСОЛЬ РОБОТА</small>
+                    <h1>Состояние робота</h1>
+                    <p id="robot-identity">Локальное управление и наблюдение</p>
+                </div>
+                <div class="connection-area">
+                    <span id="connection" role="status">Подключение…</span>
+                    <button id="refresh" type="button">Обновить</button>
+                </div>
+            </header>
+
+            <div class="summary-grid" aria-label="Основное состояние">
+                <div class="summary-card"><span>Режим</span><strong id="summary-mode">—</strong><small id="summary-mode-detail">Ожидание состояния</small></div>
+                <div class="summary-card"><span>Батарея</span><strong id="summary-battery">—</strong><small id="summary-charge-state">Ожидание BMS</small></div>
+                <div class="summary-card"><span>Данные датчиков</span><strong id="summary-sensors">—</strong><small id="summary-sensors-detail">Лидар · IMU · одометрия</small></div>
+                <div class="summary-card"><span>Обновление</span><strong id="summary-age">—</strong><small id="summary-age-detail">Нет свежего состояния</small></div>
+            </div>
+
+            <nav class="quick-links" aria-label="Окна наблюдения">
+                <a href="map.html" target="_blank" rel="noopener"><strong>Карта ↗</strong><span>Локализация, точки и препятствия</span></a>
+                <a id="lidar-window" href="#" target="_blank" rel="noopener"><strong>Лидар ↗</strong><span>Скан вокруг корпуса</span></a>
+                <a id="camera-window" href="#" target="_blank" rel="noopener"><strong>Камера ↗</strong><span>Изображение и глубина</span></a>
+                <a href="battery-history.html" target="_blank" rel="noopener"><strong>История батареи ↗</strong><span>Графики и экспорт показаний</span></a>
+            </nav>
+
+            <div class="operator-grid">
+                <section class="card mode-card" aria-labelledby="mode-title">
+                    <div class="card-heading"><h2 id="mode-title">Режим работы</h2><span id="mode-badge" class="badge">Неизвестно</span></div>
+                    <p id="mode" role="status">Состояние пока не получено.</p>
+                    <p id="mode-help" class="context-help">Дождитесь подключения к роботу.</p>
+                    <label for="map">Сохранённая карта</label>
+                    <div class="map-select-row">
+                        <select id="map"><option value="">Выберите карту</option></select>
+                        <button id="refresh-maps" type="button" title="Обновить список сохранённых карт">↻ <span>Карты</span></button>
+                    </div>
+                    <p id="map-status" class="muted">Загрузка списка карт…</p>
+                    <div class="mode-buttons buttons" aria-label="Выбрать режим">
+                        <button data-mode="idle" type="button" disabled>Ожидание</button>
+                        <button data-mode="mapping" type="button" disabled>Картографирование</button>
+                        <button data-mode="localization" type="button" disabled>Локализация</button>
+                        <button data-mode="navigation" type="button" disabled>Навигация</button>
+                    </div>
+                    <label id="discard-row" class="check-label" hidden>
+                        <input id="discard" type="checkbox" />
+                        <span>Подтверждаю завершение сессии картографирования. Нужную карту сохраняю в окне карты заранее.</span>
+                    </label>
+                    <p id="gate" class="availability" role="status">Проверка доступности…</p>
+                    <p id="mode-result" class="action-result" role="status" aria-live="polite"></p>
+                    <p class="muted">Переключайте режим на неподвижном роботе. Подтверждение появится перед отправкой запроса.</p>
+                </section>
+
+                <section id="drive-panel" class="card drive-card" tabindex="0" role="group" aria-labelledby="drive-title" aria-describedby="drive-keyboard-help">
+                    <div class="card-heading"><h2 id="drive-title">Ручное управление</h2><span class="key-hint">↑ ← ↓ → / Space</span></div>
+                    <p id="drive-status" role="status">Проверка связи…</p>
+                    <div class="drive-pad" aria-label="Управление скоростью робота">
+                        <button type="button" class="drive-forward" data-drive="forward" aria-keyshortcuts="ArrowUp" disabled aria-label="Вперёд: увеличить скорость на 0,01 м/с"><span class="drive-arrow">↑</span><span>Вперёд</span><strong class="drive-speed">—</strong></button>
+                        <button type="button" class="drive-left" data-drive="left" aria-keyshortcuts="ArrowLeft" disabled aria-label="Влево: увеличить поворот влево на 0,05 рад/с"><span class="drive-arrow">←</span><span>Влево</span><strong class="drive-speed">—</strong></button>
+                        <button type="button" id="drive-stop" aria-keyshortcuts="Space" aria-label="Стоп: обнулить линейную и угловую скорость">■<strong>СТОП</strong></button>
+                        <button type="button" class="drive-right" data-drive="right" aria-keyshortcuts="ArrowRight" disabled aria-label="Вправо: увеличить поворот вправо на 0,05 рад/с"><span class="drive-arrow">→</span><span>Вправо</span><strong class="drive-speed">—</strong></button>
+                        <button type="button" class="drive-backward" data-drive="backward" aria-keyshortcuts="ArrowDown" disabled aria-label="Назад: уменьшить скорость на 0,01 м/с"><span class="drive-arrow">↓</span><span>Назад</span><strong class="drive-speed">—</strong></button>
+                    </div>
+                    <p id="drive-target"></p>
+                    <p id="drive-odometry">Фактическая скорость неизвестна</p>
+                    <p id="drive-command-result" class="action-result" role="status" aria-live="polite"></p>
+                    <p id="drive-keyboard-help" class="drive-help">Сначала выделите эту панель. ↑/↓ — шаг 0,01 м/с, ←/→ — 0,05 рад/с, Space — стоп. Отпускание стрелки не останавливает робота.</p>
+                    <p class="drive-help muted">Лимиты: 0,5 м/с и 0,5 рад/с. При потере связи действует таймаут 1 с. Ручное управление не учитывает costmap.</p>
+                </section>
+            </div>
+
+            <section id="battery" class="card" aria-labelledby="battery-title">
+                <div class="card-heading battery-heading"><h2 id="battery-title">Батарея</h2><span id="battery-status" class="badge">Ожидание данных</span><a href="battery-history.html" target="_blank" rel="noopener">История и экспорт ↗</a></div>
+                <div class="battery-overview">
+                    <div class="battery-soc-block"><strong id="battery-main-soc">—</strong><span id="battery-charge-state">Неизвестно</span><meter id="battery-gauge" min="0" max="100" value="0" hidden aria-label="Процент заряда"></meter></div>
+                    <div id="battery-metrics" class="battery-metrics"></div>
+                </div>
+                <p id="battery-age" class="muted">Измерения пока не получены.</p>
+                <details id="battery-details" class="inline-details">
+                    <summary>Ячейки, температуры и сведения о BMS</summary>
+                    <p id="battery-device">BLE → NATS</p>
+                    <div id="battery-extra" class="battery-metrics"></div>
+                    <h3>Ячейки</h3>
+                    <div id="battery-cells" class="battery-cells"></div>
+                    <p id="battery-detail"></p>
+                </details>
+            </section>
+
+            <section class="card notes-card" aria-labelledby="note-title">
+                <h2 id="note-title">Заметка оператора</h2>
+                <div class="note-row"><label class="sr-only" for="note">Заметка оператора</label><input id="note" maxlength="500" placeholder="Например: карта проверена, робот на базе" /><button id="save" type="button" disabled>Сохранить заметку</button></div>
+                <p id="note-result" class="action-result" role="status" aria-live="polite"></p>
+                <p class="muted">Сохраняется текст заметки. Параметры робота не меняются.</p>
+            </section>
+
+            <details id="diagnostics" class="card diagnostics">
+                <summary>Диагностика и API <span>Датчики, полный JSON и словарь NATS</span></summary>
+                <div class="diagnostics-content">
+                    <div class="api-tools"><button id="ping" type="button">Проверить связь</button><button id="schema" type="button">Получить словарь API</button><span id="api-result" role="status"></span></div>
+                    <details id="sources-details"><summary>Метрики и состояния датчиков</summary><div id="metrics"></div></details>
+                    <details id="state-details"><summary>Полный JSON состояния</summary><pre id="state">Состояние пока не получено</pre></details>
+                    <details id="contracts-details"><summary>Subjects и KV-ключи NATS</summary><div id="contract-values"></div></details>
+                    <details id="response-details"><summary>Последний ответ API</summary><pre id="response">Ответ команды появится здесь</pre></details>
+                </div>
+            </details>
+            <footer>Отладочный интерфейс локальной сети · карта, камера и лидар открываются в отдельных окнах.</footer>
+        </main>
+        <script src="lib/nats-core.iife.js"></script>
+        <script src="config.js"></script>
+        <script src="nats-api-core.js"></script>
+        <script src="api-shim.js"></script>
+        <script src="app.js"></script>
+        <script src="drive.js"></script>
+    </body>
+</html>

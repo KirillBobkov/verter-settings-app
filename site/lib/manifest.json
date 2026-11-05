@@ -1,0 +1,47 @@
+{
+  "ol.js": {
+    "url": "https://cdn.jsdelivr.net/npm/ol@10.6.1/dist/ol.js",
+    "sha256": "eb5ceb37f7f15f210e9a9db54e471b994ed1f3b205af73c98a7156c95a911b77",
+    "bytes": 857358
+  },
+  "ol.css": {
+    "url": "https://cdn.jsdelivr.net/npm/ol@10.6.1/ol.css",
+    "sha256": "abc8afd72cc10bd29cc143f443bae4a6804bd3cb3fb262e6b6a6bc6c924ea34f",
+    "bytes": 6343
+  },
+  "OPENLAYERS-LICENSE.md": {
+    "url": "https://cdn.jsdelivr.net/npm/ol@10.6.1/LICENSE.md",
+    "sha256": "6c4347b83a8c9feef18d57b18e3b6c44cf901b3c344a4a1fbd837e421555ab8e",
+    "bytes": 1337
+  },
+  "pako-inflate.js": {
+    "url": "https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako_inflate.min.js",
+    "sha256": "fa226c8e1e3556993260e6a5c1fe94e225da59b3418a06811fdc51d308f8bb43",
+    "bytes": 21479
+  },
+  "PAKO-LICENSE.txt": {
+    "url": "https://cdn.jsdelivr.net/npm/pako@2.1.0/LICENSE",
+    "sha256": "a04665b3b2de56c66730c1f720f528175739e4104f79073614aa611da1e85539",
+    "bytes": 1104
+  },
+  "sha256.js": {
+    "url": "https://cdn.jsdelivr.net/npm/js-sha256@0.11.1/build/sha256.min.js",
+    "sha256": "4b53da9acab6a5d4010107be2025002fe1a22da64804dd5200b46895cb899219",
+    "bytes": 9229
+  },
+  "SHA256-LICENSE.txt": {
+    "url": "https://cdn.jsdelivr.net/npm/js-sha256@0.11.1/LICENSE.txt",
+    "sha256": "0fea2e0cffe72ee17adc25c42e55daf5c87c6e9cd5b3362ee4213890bda0ee7c",
+    "bytes": 1076
+  },
+  "nats-core.iife.js": {
+    "url": "npm:@nats-io/nats-core@3.4.0 (esbuild --bundle --minify --format=iife)",
+    "sha256": "3ed6cf8bda5761e7659e7e110871472966a9439499a27c3ff5ed56e3f8b71f41",
+    "bytes": 145886
+  },
+  "NATS-CORE-LICENSE": {
+    "url": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+    "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "bytes": 11357
+  }
+}

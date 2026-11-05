@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Verter · История BMS</title>
+        <link rel="stylesheet" href="battery-history.css" />
+        <script src="lib/nats-core.iife.js" defer></script>
+        <script src="config.js" defer></script>
+        <script src="nats-api-core.js" defer></script>
+        <script src="api-shim.js" defer></script>
+        <script src="battery-history.js" defer></script>
+    </head>
+    <body>
+        <main>
+            <header><small>VERTER / BATTERY</small><h1>История аккумулятора</h1></header>
+            <section class="toolbar">
+                <label>Период <select id="period"><option value="3600">Час</option><option value="21600">6 часов</option><option value="86400">Сутки</option><option value="259200">3 дня</option><option value="604800" selected>Неделя</option></select></label>
+                <button id="refresh" type="button">Обновить</button>
+                <a id="export-csv" href="/api/battery/export?format=csv&amp;period_s=604800">Скачать CSV</a>
+                <a id="export-txt" href="/api/battery/export?format=txt&amp;period_s=604800">Скачать TXT</a>
+                <label><input id="auto" type="checkbox" checked /> Обновлять каждые 30 секунд</label>
+                <span id="connection" role="status">Загрузка…</span>
+            </section>
+            <p id="soc-summary" role="status">Последний сохранённый заряд: —</p>
+            <p id="coverage"></p>
+            <p>Запись каждые 10 секунд и при смене режима. Линия — среднее, полоса — минимум–максимум.
+                Пропуски означают отсутствие свежих данных. Время показано в часовом поясе браузера. Экспорт содержит исходные снимки выбранного периода; временные метки — UTC и Unix seconds.</p>
+            <section class="mode-card">
+                <h2>Зарядка и разрядка</h2>
+                <div class="legend"><span class="charging">● Зарядка</span><span class="discharging">● Разрядка</span><span class="idle">● Ток около нуля</span><span class="unknown">● Нет данных / неизвестно</span></div>
+                <canvas id="modes" aria-label="Режим зарядки и разрядки за выбранный период"></canvas>
+                <p id="mode-detail">Наведите указатель на график для просмотра времени и режима.</p>
+                <p>Зарядка: ток выше +0,1 А; разрядка: ниже −0,1 А. Ток около нуля не подтверждает полный заряд.
+                    Наличие зарядного устройства отдельно не определяется.</p>
+            </section>
+            <div id="charts" class="charts"></div>
+            <p>Флаги BMS сохраняются как исходная битовая маска: смысл битов этой версии прошивки не подтверждён.
+                Графики показывают полученные от BMS значения, без расчётного восстановления пропущенных измерений.</p>
+        </main>
+    </body>
+</html>

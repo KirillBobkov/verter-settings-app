@@ -1,69 +1,54 @@
 # verter-settings-app — веб-интерфейс робота Verter
 
-React-приложение (GitHub Pages), подключающееся напрямую к NATS-хабу робота
-`verter_01` по wss. Замена SSH-туннеля к локальному UI :8088. Полный план
-миграции — репозиторий `nats-hub`, `docs/PLAN.md` (Часть D).
-
-## Стек
-
-Vite 8 · React 19 · TypeScript 6 · react-router-dom 7 (HashRouter) ·
-@nats-io/nats-core/kv/jetstream 3.4 (WebSocket-клиент NATS) · zustand 5 ·
-vitest 5 · eslint 9 (flat). Node 22 (Node 20 — EOL, не использовать).
-
-## Быстрый старт
-
-```sh
-npm ci
-npm run dev        # http://localhost:5173 (Origin уже в allowed_origins хаба)
-npm run lint && npm run typecheck && npm run test -- --run && npm run build
-```
-
-Для подключения нужен файл кредов `ui-<имя>.creds` (см. docs/OPERATORS.md).
-Без кредов приложение откроется, но будет ждать их на «Настройках».
+Оригинальный интерфейс робота (`verter-robot/services/nats_bridge/static`),
+размещённый на GitHub Pages и подключённый напрямую к NATS-хабу по wss.
+Код страниц не изменён — добавлена только прослойка, выполняющая те же
+HTTP-вызовы `/api/*` через NATS (зеркало `robot_nats/web.py`).
 
 ## Архитектура
 
 ```
-GitHub Pages (этот репозиторий)  ──wss:443──►  NATS-хаб (VPS)  ◄──leaf:7422 TLS──  робот verter_01
+GitHub Pages (site/, статика)  ──wss:443──►  NATS-хаб (VPS)  ◄──leaf:7422──  робот verter_01
 ```
 
-- **Никаких кредов в коде/бандле/репо.** Креды вводит оператор (localStorage).
-- `src/lib/nats/` — единственный слой работы с NATS:
-  - `connection.ts` — wsconnect + credsAuthenticator, бесконечный reconnect;
-  - `clock.ts` — серверные часы Jetson (образцы из reply `cmd_vel.command.status`,
-    допуск будущего 0.5 с; без свежей синхронизации motion-команды не отправляются);
-  - `envelope.ts` — командный конверт v1 (без поля action!);
-  - `request.ts` — request/reply с таймаутами по классу команды, без авто-ретраев;
-  - `kv.ts` — bucket `VERTER_01_STATE` через JetStream-домен `verter_01`
-    (KV физически на роботе, хаб только маршрутизирует);
-  - `subjects.ts` — реестр субъектов и таймауты.
-- `public/config.json` — runtime-конфиг (адрес хаба не инлайнится в бандл;
-  меняется без пересборки, override в «Настройках»).
-- Роутинг — HashRouter (`#/`, `#/map`, …): GitHub Pages не делает SPA-реврайтов.
+| Файл | Назначение |
+|---|---|
+| `site/index.html`, `app.js`, `drive.js`, `map.*`, `battery-history.*`, … | Оригинальные страницы робота (копия 1:1) |
+| `site/lib/nats-core.iife.js` | Браузерный бандл `@nats-io/nats-core@3.4.0` (esbuild; SHA в `lib/manifest.json`) |
+| `site/nats-api-core.js` | Ядро: action→subject, конверты, таймауты — зеркало `web.py`. E2E-проверен на живом хабе |
+| `site/api-shim.js` | Перехват `fetch('/api/*')`, панель настроек NATS (⚙ справа внизу), клиентский экспорт батареи |
+| `site/config.js` | Адрес хаба и robotId (runtime, без пересборки) |
+
+Отличия от локальной версии: окна камеры (8089) и лидара (8090) скрыты —
+они живут на роботе и недоступны с GitHub Pages; экспорт батареи выполняется
+в браузере (постранично `battery.history {raw:true}` → CSV/TXT как в
+`history_export.py`); ссылки `/map`, `/battery-history` ведут на `map.html`,
+`battery-history.html`.
+
+## Первый вход
+
+1. Откройте сайт, щёлкните **⚙ справа внизу**.
+2. Вставьте креды `ui-<имя>.creds` (выдаёт администратор хаба; передаются по
+   защищённому каналу), при необходимости укажите другой сервер.
+3. «Сохранить и подключиться». Креды хранятся только в localStorage браузера.
 
 ## Деплой
 
-`git push origin main` → GitHub Actions (`lint → typecheck → test → build → Pages`).
-Однократно: Settings → Pages → Source = **GitHub Actions**.
-После первого деплоя заменить в `public/config.json` адрес хаба на реальный
-и проверить, что Origin сайта есть в `allowed_origins` хаба.
+`git push origin main` → GitHub Actions (проверка синтаксиса JS → Pages).
+Однократно: Settings → Pages → Source = GitHub Actions.
 
-## Дорожная карта (фазировка из плана, Часть D)
+## Локальная проверка
 
-| Фаза | Что входит | Статус |
-|---|---|---|
-| M0 | Каркас, NATS-слой, «Настройки» (креды, адрес, JWT-экспирация), мониторинг-скелет, CI | ✅ этот коммит |
-| M1 | Полный мониторинг (снимок, BMS-панель, режимы, заметка, контракт) + DrivePad (порт drive.js: шаги 0.01 м/с / 0.05 рад/с, lease 1 с, keepalive 200 мс, клавиатура) | ⏳ |
-| M2 | Живая карта (map.update.*, чанковая загрузка, OpenLayers, скан, модель робота) | ⏳ |
-| M3 | История BMS (графики, клиентский экспорт CSV/TXT) + локализация/точки/маршруты | ⏳ |
-| M4 | Лидар через NATS; камера: статус+сигналинг, заглушка TURN | ⏳ |
+```sh
+cd site && python3 -m http.server 5173   # origin http://localhost:5173 уже разрешён на хабе
+```
 
-Контракты робота — копии в `docs/contracts/` (синхронизировать при изменении
-версии контракта в репозитории робота).
+E2E ядра против живого хаба (Node 22+, креды в ~/nats-hub):
+см. историю — сценарий покрывает state/metrics/drive/map/history/ping/cmd_vel.
 
-## Безопасность
+## Дорожная карта
 
-- Scoped-ключ `ui` хаба ограничивает клиента субъектами `verter_01.*` и
-  read-only KV; подробности — `docs/hub.md`.
-- Программный стоп ≠ аппаратный аварийный выключатель; ручное управление не
-  включает объезд препятствий (подпись продублирована в футере UI).
+- [x] Миграция оригинального UI 1:1 + NATS-прослойка (этот коммит)
+- [ ] React-версия (M1 мониторинг+управление → M4) — после обкатки статической
+
+Контракты робота — `docs/contracts/`. План целиком — репозиторий `nats-hub`.

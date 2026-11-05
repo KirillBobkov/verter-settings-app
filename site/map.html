@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Verter · Карта</title>
+        <link rel="stylesheet" href="lib/ol.css" />
+        <link rel="stylesheet" href="map.css" />
+        <link rel="stylesheet" href="drive-widget.css" />
+        <link rel="stylesheet" href="localization-ui.css" />
+        <link rel="stylesheet" href="costmap-ui.css" />
+        <script src="lib/nats-core.iife.js" defer></script>
+        <script src="config.js" defer></script>
+        <script src="nats-api-core.js" defer></script>
+        <script src="api-shim.js" defer></script>
+        <script src="lib/ol.js" defer></script>
+        <script src="lib/pako-inflate.js" defer></script>
+        <script src="lib/sha256.js" defer></script>
+        <script src="drive-widget.js" defer></script>
+        <script src="map.js" defer></script>
+        <script src="costmap-ui.js" defer></script>
+        <script src="localization-ui.js" defer></script>
+        <script src="map-shell.js" defer></script>
+    </head>
+    <body class="map-console">
+    <main class="map-console-main">
+        <header class="sensor-header">
+            <div class="map-heading">
+                <small>VERTER / КАРТА</small>
+                <div class="map-title-row"><h1>Карта робота</h1><span id="map-mode-badge" class="mode-pill">Проверка режима…</span></div>
+                <a href="/" target="_blank" rel="noopener">Главная: состояние и режимы ↗</a>
+            </div>
+            <div id="drive-widget"></div>
+        </header>
+        <div class="map-workspace">
+            <section class="map-stage" aria-label="Карта и наблюдения">
+                <section class="toolbar" aria-label="Просмотр карты">
+                    <button id="fit-map" type="button" disabled>Вся карта</button>
+                    <button id="fit-robot" type="button" disabled>К роботу</button>
+                    <label><input id="follow" type="checkbox" /> Следовать</label>
+                    <label><input id="show-scan" type="checkbox" checked /> Лидар</label>
+                    <span id="connection" role="status">Подключение…</span>
+                </section>
+                <section class="map-viewport">
+                    <div id="ol-map" tabindex="0" aria-label="Карта помещения в координатах map"></div>
+                    <div id="map-empty" role="status">Ожидание карты…</div>
+                    <button id="map-setup-link" class="map-empty-action" type="button" data-open-map-tab="localization">К выбору карты и локализации</button>
+                </section>
+                <div class="map-readout" aria-live="polite">
+                    <p id="pose-info">Положение робота неизвестно</p>
+                    <p id="scan-info">Облако лидара пока не получено</p>
+                    <details class="map-diagnostics">
+                        <summary>Параметры карты и диагностика</summary>
+                        <p id="map-info">Параметры карты пока не получены</p>
+                        <p id="cursor-info">Координаты курсора: —</p>
+                        <p id="scan-quality" class="warning" role="status"></p>
+                    </details>
+                </div>
+            </section>
+            <aside class="map-sidebar" aria-label="Инструменты карты">
+                <div class="map-workflow">
+                    <p id="map-workflow-hint">Проверка состояния…</p>
+                    <button id="map-workflow-action" type="button" data-open-map-tab="localization">Локализация</button>
+                </div>
+                <nav class="map-tabs" role="tablist" aria-label="Разделы инструментов">
+                    <button id="map-tab-localization" type="button" role="tab" data-map-tab="localization" aria-controls="map-panel-localization" aria-selected="true">Локализация</button>
+                    <button id="map-tab-points" type="button" role="tab" data-map-tab="points" aria-controls="map-panel-points" aria-selected="false" tabindex="-1">Точки</button>
+                    <button id="map-tab-routes" type="button" role="tab" data-map-tab="routes" aria-controls="map-panel-routes" aria-selected="false" tabindex="-1">Маршруты</button>
+                    <button id="map-tab-layers" type="button" role="tab" data-map-tab="layers" aria-controls="map-panel-layers" aria-selected="false" tabindex="-1">Слои</button>
+                    <button id="map-tab-save" type="button" role="tab" data-map-tab="save" aria-controls="map-panel-save" aria-selected="false" tabindex="-1">Сохранение</button>
+                </nav>
+<div id="map-panel-localization" class="map-tool-panel" role="tabpanel" aria-labelledby="map-tab-localization">
+<section class="loc-panel" aria-labelledby="loc-title">
+                <h2 id="loc-title">Карта и режим</h2>
+                <div class="loc-row">
+                    <label>Сохранённая карта <select id="loc-map"><option value="">Загрузка списка…</option></select></label>
+                    <button id="loc-refresh" type="button">Обновить список</button>
+                    <button id="loc-start" type="button" disabled>Запустить локализацию</button>
+                </div>
+                <p id="loc-mode-info">Проверка состояния режима…</p>
+                <p id="loc-status" role="status">Локализация пока не получена</p>
+                <p id="loc-current-pose">Текущее положение: —</p>
+                <p id="loc-message" role="status" aria-live="polite"></p>
+            </section>
+<p class="map-help">Выбор имени загружает каталог точек. Сама карта появляется после явного запуска локализации или картографирования.</p>
+<p id="loc-action-hint" class="map-action-hint" role="status"></p>
+<section class="loc-panel" aria-labelledby="loc-pose-title">
+                <h2 id="loc-pose-title">Начальное положение</h2>
+                <p>Укажите положение робота на этой карте. Для направления протяните указатель от точки или введите угол.
+                    Отправка начальной позы и подтверждение совпадения выполняются отдельными кнопками.</p>
+                <div class="loc-row loc-pose-fields">
+                    <label>X, м <input id="loc-init-x" type="number" step="0.001" /></label>
+                    <label>Y, м <input id="loc-init-y" type="number" step="0.001" /></label>
+                    <label>Угол, ° <input id="loc-init-yaw" type="number" step="0.1" value="0" /></label>
+                    <button id="loc-place-initial" type="button" disabled>Указать на карте</button>
+                    <button id="loc-initialize" type="button" disabled>Применить начальную позу…</button>
+                </div>
+                <details class="loc-advanced">
+                    <summary>Начальная неопределённость</summary>
+                    <div class="loc-row">
+                        <label>σ положения, м <input id="loc-std-xy" type="number" min="0.01" max="10" step="0.01" value="0.25" /></label>
+                        <label>σ угла, ° <input id="loc-std-yaw" type="number" min="1" max="180" step="1" value="15" /></label>
+                    </div>
+                </details>
+                <div class="loc-row loc-verification">
+                    <label><input id="loc-alignment" type="checkbox" /> Я визуально проверил совпадение робота и облака лидара с картой</label>
+                    <button id="loc-confirm" type="button" disabled>Подтвердить положение…</button>
+                </div>
+                <p>Уменьшение ковариации само по себе не подтверждает правильное положение.</p>
+                <p id="loc-placement-info" role="status">Выбор на карте доступен только для текущей сохранённой карты в локализации.</p>
+                <button id="loc-placement-cancel" type="button" hidden>Отменить выбор на карте</button>
+            </section>
+</div>
+<div id="map-panel-points" class="map-tool-panel" role="tabpanel" aria-labelledby="map-tab-points" hidden>
+<section class="loc-panel" aria-labelledby="loc-points-title">
+                    <h2 id="loc-points-title">Именованные точки</h2>
+                    <p>Координаты задаются в метрах в системе выбранной карты. Сохранение точки не перемещает робота.</p>
+                    <form id="loc-point-form">
+                        <div class="loc-row">
+                            <label>ID <input id="loc-point-id" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}" placeholder="point_1" required /></label>
+                            <label>Название <input id="loc-point-label" maxlength="100" placeholder="У входа" required /></label>
+                        </div>
+                        <div class="loc-row loc-pose-fields">
+                            <label>X, м <input id="loc-point-x" type="number" step="0.001" /></label>
+                            <label>Y, м <input id="loc-point-y" type="number" step="0.001" /></label>
+                            <label>Угол, ° <input id="loc-point-yaw" type="number" step="0.1" value="0" /></label>
+                        </div>
+                        <div class="loc-row loc-actions">
+                            <button id="loc-place-point" type="button" disabled>Указать на карте</button>
+                            <button id="loc-point-save" type="submit" disabled>Сохранить точку</button>
+                            <button id="loc-point-current" type="button" disabled>Сохранить текущее положение</button>
+                            <button id="loc-point-new" type="button">Новая точка</button>
+                        </div>
+                    </form>
+                    <p id="loc-point-note">Ожидание списка точек…</p>
+                    <div id="loc-point-list" class="loc-records"></div>
+                </section>
+</div>
+<div id="map-panel-routes" class="map-tool-panel" role="tabpanel" aria-labelledby="map-tab-routes" hidden>
+<section class="loc-panel" aria-labelledby="loc-routes-title">
+                    <h2 id="loc-routes-title">Описания маршрутов</h2>
+                    <p class="loc-scheme-note">Редактор порядка точек. Линии на карте показывают последовательность, а не рассчитанный путь. Запуск маршрута пока не реализован.</p>
+                    <form id="loc-route-form">
+                        <div class="loc-row">
+                            <label>ID <input id="loc-route-id" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}" placeholder="route_1" required /></label>
+                            <label>Название <input id="loc-route-label" maxlength="100" placeholder="Обход помещения" required /></label>
+                        </div>
+                        <label class="loc-kind">Тип описания <select id="loc-route-kind">
+                            <option value="visit">Посетить точки · будущие остановки</option>
+                            <option value="through">Пройти через точки · будущее прохождение</option>
+                        </select></label>
+                        <div class="loc-row loc-actions">
+                            <label>Добавить точку <select id="loc-route-point"></select></label>
+                            <button id="loc-route-add" type="button" disabled>Добавить в конец</button>
+                        </div>
+                        <ol id="loc-route-order" class="loc-route-order" aria-label="Порядок точек"></ol>
+                        <div class="loc-row loc-actions">
+                            <button id="loc-route-save" type="submit" disabled>Сохранить описание маршрута</button>
+                            <button id="loc-route-new" type="button">Новый маршрут</button>
+                        </div>
+                    </form>
+                    <p id="loc-route-note">Ожидание списка маршрутов…</p>
+                    <div id="loc-route-list" class="loc-records"></div>
+                </section>
+</div>
+<div id="map-panel-layers" class="map-tool-panel" role="tabpanel" aria-labelledby="map-tab-layers" hidden>
+<section class="costmap-panel" aria-labelledby="costmap-title">
+                <h2 id="costmap-title">Препятствия Nav2: лидар + камера + УЗ</h2>
+                <div class="costmap-controls">
+                    <label><input id="costmap-local" type="checkbox" checked /> Локальная costmap</label>
+                    <label><input id="costmap-global" type="checkbox" /> Глобальная costmap</label>
+                    <label><input id="costmap-inflation" type="checkbox" checked /> Градиент стоимости</label>
+                    <label class="costmap-opacity">Непрозрачность
+                        <input id="costmap-opacity" type="range" min="10" max="100" value="65" step="5" />
+                        <output id="costmap-opacity-value" for="costmap-opacity">65%</output>
+                    </label>
+                </div>
+                <div class="costmap-legend" aria-label="Обозначения costmap">
+                    <span><i class="costmap-swatch costmap-swatch-obstacle" aria-hidden="true"></i>Препятствие</span>
+                    <span><i class="costmap-swatch costmap-swatch-inscribed" aria-hidden="true"></i>Зона высокой стоимости у препятствия</span>
+                    <span><i class="costmap-swatch costmap-swatch-inflation" aria-hidden="true"></i>Градиент стоимости</span>
+                    <span>Свободные и неизвестные клетки прозрачны</span>
+                </div>
+                <div class="costmap-statuses" aria-live="polite">
+                    <p id="costmap-local-status">Локальная: ожидание данных…</p>
+                    <p id="costmap-global-status">Глобальная: скрыта</p>
+                </div>
+                <p id="costmap-summary">Получение состояния Nav2…</p>
+            </section>
+</div>
+<div id="map-panel-save" class="map-tool-panel" role="tabpanel" aria-labelledby="map-tab-save" hidden>
+<section class="save-panel">
+                <label>Имя карты <input id="map-name" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}" placeholder="room_1" /></label>
+                <button id="save-map" type="button" disabled>Сохранить карту и граф SLAM</button>
+                <p id="save-info" role="status">Сохранение доступно в режиме картографирования.</p>
+                <p>Имя: латиница, цифры, _ и -. Сохраняйте после остановки робота оператором.
+                    Создаются YAML/PGM для навигации и граф SLAM для продолжения работы. Сохранение не завершает режим.</p>
+            </section>
+</div>
+            </aside>
+        </div>
+        <footer class="map-footer">Выбор точки на карте задаёт координаты. Применение позы и сохранение выполняются отдельными кнопками.
+            Стрелки управляют скоростью только при фокусе панели управления; отпускание стрелки не останавливает робота. Space в этой панели — стоп.</footer>
+    </main>
+</body>
+</html>
