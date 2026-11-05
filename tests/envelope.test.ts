@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { makeEnvelope } from '../src/lib/nats/envelope'
 import { feedFromStatusReply, resetClock } from '../src/lib/nats/clock'
-import { credsLooksValid, decodeJwtExp } from '../src/lib/nats/auth'
+import { sanitizeCreds, credsLooksValid, decodeJwtExp } from '../src/lib/nats/auth'
 
 function b64url(o: object): string {
   return btoa(JSON.stringify(o)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
@@ -28,14 +28,20 @@ describe('makeEnvelope (контракт NATS_CONTRACTS_V1)', () => {
 })
 
 describe('creds-файл оператора', () => {
+  // формат как у nats CLI: маркеры USER NKEY SEED, seed = SU + 56 символов
+  const seed = 'SU' + 'AB'.repeat(28)
   const validCreds = [
     '-----BEGIN NATS USER JWT-----',
     `eyJ0eXAiOiJKV1QiLCJhbGciOiJlZDI1NTE5LW5rZXkifQ.${b64url({ exp: 1900000000, name: 'ui-operator' })}.c2ln`,
     '------END NATS USER JWT------',
     '',
-    '-------BEGIN USER SEED-------',
-    'SUAAQWERTYUIOPASDFGHJKLZXCVBNMQWERTYUIOPASDFGHJKLZXCVBNM',
-    '-------END USER SEED-------',
+    '************************* IMPORTANT *************************',
+    'NKEY Seed printed below can be used to sign and prove identity.',
+    '',
+    '-----BEGIN USER NKEY SEED-----',
+    seed,
+    '------END USER NKEY SEED------',
+    '',
   ].join('\n')
 
   it('распознаёт валидный формат', () => {
@@ -45,5 +51,24 @@ describe('creds-файл оператора', () => {
 
   it('достаёт exp из JWT', () => {
     expect(decodeJwtExp(validCreds)).toBe(1900000000)
+  })
+
+  it('sanitize чинит разорванный переносами JWT', () => {
+    const jwt = validCreds.split('\n')[1]!
+    const broken = [
+      '-----BEGIN NATS USER JWT-----',
+      jwt.slice(0, 200),
+      jwt.slice(200, 400),
+      jwt.slice(400),
+      '------END NATS USER JWT------',
+      '-----BEGIN USER NKEY SEED-----',
+      seed.slice(0, 30),
+      seed.slice(30),
+      '------END USER NKEY SEED------',
+    ].join('\n')
+    const fixed = sanitizeCreds(broken)
+    expect(fixed).toContain(jwt)
+    expect(fixed).toContain(seed)
+    expect(credsLooksValid(fixed!)).toBe(true)
   })
 })

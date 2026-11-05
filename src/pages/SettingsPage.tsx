@@ -4,7 +4,7 @@ import {
   loadCreds,
   saveCreds,
   forgetCreds,
-  credsLooksValid,
+  sanitizeCreds,
   decodeJwtExp,
   decodeJwtName,
 } from '../lib/nats/auth'
@@ -30,11 +30,13 @@ export function SettingsPage() {
   async function onSave() {
     const trimmed = creds.trim()
     if (trimmed) {
-      if (!credsLooksValid(trimmed)) {
-        setMsg('Креды не похожи на nats-creds: нужны блоки JWT и USER SEED')
+      // normalize: склеить разорванные переносами JWT/seed, отбросить лишнее
+      const sanitized = sanitizeCreds(trimmed)
+      if (!sanitized) {
+        setMsg('Креды не похожи на nats-creds: нужны блоки NATS USER JWT и USER NKEY SEED')
         return
       }
-      saveCreds(trimmed)
+      saveCreds(sanitized)
     }
     const urlOverride = override.trim()
     setWsUrlOverride(/^wss?:\/\//.test(urlOverride) ? urlOverride : null)
