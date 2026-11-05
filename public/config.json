@@ -1,0 +1,4 @@
+{
+  "natsWsUrl": "wss://nats.example.com:443",
+  "robotId": "verter_01"
+}
