@@ -15,10 +15,6 @@
     border-radius: 10px;
     outline: none;
 }
-.drive-widget #drive-panel:focus-within {
-    border-color: #55e6c1;
-    box-shadow: 0 0 0 2px #55e6c144;
-}
 .drive-widget .widget-pad {
     display: grid;
     grid-template-columns: repeat(3, 44px);

@@ -56,7 +56,6 @@ label { font-size: 13px; color: #c8d6e5; }
 .buttons { display: flex; flex-wrap: wrap; gap: 8px; }
 .mode-buttons.buttons { display: grid; }
 .drive-card { outline: none; }
-#drive-panel:focus, #drive-panel:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 .key-hint { margin-left: auto; font-size: 12px; color: var(--muted); }
 .drive-pad { display: grid; grid-template-columns: repeat(3, minmax(0, 102px)); grid-template-rows: repeat(3, 76px); gap: 6px; justify-content: center; margin: 13px auto; max-width: 318px; }
 .drive-pad button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px; touch-action: manipulation; font-size: 12px; }

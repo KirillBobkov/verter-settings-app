@@ -31,7 +31,7 @@
     --radius-s: 8px; --radius-m: 12px; --radius-l: 16px;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
-* { box-sizing: border-box; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 /* сброс браузерных дефолтов кнопок: appearance, margin, padding, фон, шрифт */
 button { appearance: none; -webkit-appearance: none; margin: 0; padding: 0;
     border: 0; background: none; font: inherit; color: inherit; cursor: pointer; }
@@ -73,6 +73,7 @@ button, input, select, textarea, a, [tabindex] { outline-color: var(--accent); }
 .nx-nav button:hover { background: var(--secondary-card-bg-color); color: var(--font-color); }
 .nx-nav button[aria-current="page"] { background: var(--accent-dim); color: var(--accent); }
 .nx-nav hr { border: 0; height: 1px; background: var(--secondary-card-bg-color); margin: 9px 4px; }
+.nx-nav .nx-ic { width: 20px; height: 20px; flex: none; }
 .nx-content { padding: 18px 20px 30px; min-width: 0; }
 
 /* общие блоки */
@@ -167,7 +168,6 @@ body.nx-placing #nx-ol-map { cursor: crosshair; }
 .nx-drive-grid button.moving { background: rgba(0, 184, 0, .22); box-shadow: 0 0 0 2px var(--helper-green); }
 .nx-drive-grid #drive-stop { grid-area: 2 / 2; background: rgba(255, 77, 77, .14);
     color: var(--helper-red); font-size: 17px; font-weight: 500; }
-#drive-panel:focus, #drive-panel:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 .nx-drive-info { min-width: 220px; flex: 1; }
 .nx-drive-info p { font-size: 12.5px; color: var(--secondary-font-color); margin: 6px 0; }
 #drive-target, #drive-odometry { text-align: center; font-variant-numeric: tabular-nums; }
@@ -209,14 +209,32 @@ canvas.nx-chart { width: 100%; height: 170px; display: block; touch-action: pan-
 /* адаптив */
 @media (max-width: 900px) {
     .nx-body { grid-template-columns: 1fr; }
-    .nx-nav { flex-direction: row; overflow-x: auto; padding: 8px; }
-    .nx-nav button { width: auto; white-space: nowrap; }
+
+    /* сайдбар превращается в нижнюю таб-панель, как в мобильных приложениях */
+    .nx-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 70;
+        flex-direction: row; gap: 0; padding: 4px 6px calc(4px + env(safe-area-inset-bottom, 0px));
+        background: var(--bg-color-gradient-1); box-shadow: 0 -2px 12px rgba(0, 0, 0, .4); }
+    .nx-nav button { flex: 1; width: auto; flex-direction: column; align-items: center; justify-content: center;
+        gap: 3px; padding: 6px 2px 5px; font-size: 10.5px; white-space: nowrap; }
+    .nx-nav .nx-ic { width: 22px; height: 22px; }
+    .nx-nav button[aria-current="page"] { color: var(--accent); background: none; }
     .nx-nav hr { display: none; }
-    .nx-content { padding: 12px 12px 26px; }
+    .nx-content { padding: 12px 12px calc(78px + env(safe-area-inset-bottom, 0px)); }
+
+    /* топбар под мобильное разрешение */
+    .nx-topbar { height: 48px; padding: 0 12px; gap: 8px; }
+    .nx-clock, #nx-robot { display: none; }
+    .nx-pill { flex: 1; min-width: 0; }
+    #nx-conn-text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #nx-ui-toggle { padding: 4px 10px; font-size: 11.5px; flex: none; }
+
     .nx-grid2 { grid-template-columns: 1fr; }
     #nx-ol-map { height: 48vh; min-height: 320px; }
 }
 @media (max-width: 560px) {
     .nx-pose3 { grid-template-columns: 1fr; }
     .nx-drive-wrap { justify-content: center; }
+    .nx-topbar { gap: 6px; }
+    .nx-brand { font-size: 12px; letter-spacing: .16em; }
+    #nx-ui-toggle { padding: 4px 8px; }
 }
