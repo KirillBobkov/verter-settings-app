@@ -6,7 +6,7 @@ h1 { margin-bottom: 24px; }
 h2 { font-size: 17px; margin: 0 0 12px; }
 p { color: #adc0d2; font-size: 13px; line-height: 1.5; }
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
-button, select { font: inherit; color: inherit; background: #263a4d; border: 1px solid #62758a; border-radius: 6px; padding: 8px 12px; }
+button, select { appearance: none; margin: 0; font: inherit; color: inherit; background: #263a4d; border: 0; border-radius: 6px; padding: 8px 12px; }
 button { cursor: pointer; }
 .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 410px), 1fr)); gap: 18px; }
 .chart, .mode-card { min-width: 0; padding: 18px; border: 1px solid #354455; border-radius: 12px; background: #182432; }

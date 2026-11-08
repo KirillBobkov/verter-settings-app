@@ -1,0 +1,222 @@
+/* Новый интерфейс Verter — тёмная тема на палитре проекта (#c8ed00 на #000).
+   Дизайн-система без статических рамок: поверхности разделяются контрастом
+   фона и мягкими тенями, выбранное состояние — заливка акцентом, фокус —
+   outline. Логика робота не меняется: см. next.js. */
+:root {
+    color-scheme: dark;
+    --font-color: #fff;
+    --secondary-font-color: #9e9e9e;
+    --bg-color: #000;
+    --bg-color-gradient-1: #191919;
+    --bg-color-gradient-2: #393939;
+    --card-bg-color: #1b1b1b;
+    --secondary-card-bg-color: #2d2d2d;
+    --box-shadow: rgba(0, 0, 0, .2);
+    --shadow-s: 0 2px 12px rgba(0, 0, 0, .35);
+    --shadow-l: 0 8px 30px rgba(0, 0, 0, .45);
+    --accent: #c8ed00;
+    --accent-dim: rgba(200, 237, 0, .12);
+    --helper-red: #ff4d4d;
+    --helper-green: #00b800;
+    --warning: #ffd091;
+    --snow: #b5e5ff;
+    --charge-charging: #63e6be;
+    --charge-discharging: #ffb866;
+    --charge-idle: #7eaaff;
+    --charge-unknown: #526071;
+    --costmap-obstacle: #ff4657;
+    --costmap-inscribed: #ff8a48;
+    --costmap-inflation: #ffd166;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --radius-s: 8px; --radius-m: 12px; --radius-l: 16px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+/* сброс браузерных дефолтов кнопок: appearance, margin, padding, фон, шрифт */
+button { appearance: none; -webkit-appearance: none; margin: 0; padding: 0;
+    border: 0; background: none; font: inherit; color: inherit; cursor: pointer; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg-color); color: var(--font-color); line-height: 1.45; }
+a { color: var(--snow); }
+h1, h2, h3 { font-weight: 500; }
+code, pre, .mono { font-family: var(--mono); }
+button, input, select, textarea, a, [tabindex] { outline-color: var(--accent); }
+
+/* верхняя панель */
+.nx-topbar { position: sticky; top: 0; z-index: 60; display: flex; align-items: center; gap: 12px;
+    padding: 0 16px; height: 54px; background: var(--bg-color-gradient-1); box-shadow: var(--shadow-s); }
+.nx-brand { display: flex; align-items: center; gap: 8px; letter-spacing: .22em; font-size: 13px; font-weight: 500; }
+.nx-brand i { width: 12px; height: 12px; border-radius: 3px; background: var(--accent); }
+.nx-spacer { flex: 1; }
+.nx-pill { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--secondary-font-color); }
+.nx-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.nx-dot[data-s="ok"] { background: var(--helper-green); }
+.nx-dot[data-s="live"] { background: var(--accent); }
+.nx-dot[data-s="wait"] { background: var(--warning); }
+.nx-dot[data-s="off"] { background: var(--secondary-font-color); }
+.nx-dot[data-s="err"] { background: var(--helper-red); }
+.nx-clock { font-family: var(--mono); font-size: 12px; color: var(--secondary-font-color); }
+
+/* переключатель интерфейса */
+#nx-ui-toggle { display: inline-flex; align-items: center; gap: 8px; border: 0;
+    border-radius: 20px; padding: 5px 12px; background: var(--accent); color: #000; font: inherit; font-size: 12.5px;
+    font-weight: 500; cursor: pointer; }
+#nx-ui-toggle .nx-dot { background: #000; }
+#nx-ui-toggle:hover { filter: brightness(1.08); }
+
+/* каркас */
+.nx-body { display: grid; grid-template-columns: 212px minmax(0, 1fr); min-height: calc(100dvh - 54px); }
+.nx-nav { display: flex; flex-direction: column; gap: 3px; padding: 14px 10px; background: var(--bg-color-gradient-1); }
+.nx-nav button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border: 0;
+    border-radius: var(--radius-s); background: none; color: var(--secondary-font-color); font: inherit; font-size: 13.5px;
+    text-align: left; cursor: pointer; }
+.nx-nav button:hover { background: var(--secondary-card-bg-color); color: var(--font-color); }
+.nx-nav button[aria-current="page"] { background: var(--accent-dim); color: var(--accent); }
+.nx-nav hr { border: 0; height: 1px; background: var(--secondary-card-bg-color); margin: 9px 4px; }
+.nx-content { padding: 18px 20px 30px; min-width: 0; }
+
+/* общие блоки */
+.nx-card { background: var(--card-bg-color); border-radius: var(--radius-l);
+    padding: 16px 18px; margin: 0 0 14px; box-shadow: var(--shadow-s); }
+.nx-h { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 12px; font-weight: 500;
+    letter-spacing: .09em; text-transform: uppercase; color: var(--secondary-font-color); }
+.nx-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.nx-grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 1fr); gap: 14px; align-items: start; }
+.nx-note { font-size: 12.5px; color: var(--secondary-font-color); margin: 8px 2px; }
+.nx-note[data-error="true"] { color: var(--helper-red); }
+button { font: inherit; }
+.nx-btn { display: inline-flex; align-items: center; gap: 7px; background: var(--secondary-card-bg-color);
+    border: 0; border-radius: var(--radius-s); padding: 8px 14px; color: var(--font-color);
+    font-size: 13px; cursor: pointer; }
+.nx-btn:hover:not(:disabled) { background: #3d3d3d; }
+.nx-btn:disabled { opacity: .5; cursor: default; }
+.nx-btn-primary { background: var(--accent); color: #000; font-weight: 500; }
+.nx-btn-primary:hover:not(:disabled) { background: #d9ff0f; }
+.nx-btn-danger { background: rgba(255, 77, 77, .14); color: var(--helper-red); }
+.nx-btn-danger:hover:not(:disabled) { background: rgba(255, 77, 77, .24); }
+.nx-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--secondary-card-bg-color);
+    border-radius: 20px; padding: 5px 12px; font-size: 12px;
+    color: var(--secondary-font-color); }
+.nx-chip[data-on] { background: var(--accent); color: #000; font-weight: 500; }
+.nx-chip[data-on] strong { color: #000; }
+.nx-chip[aria-selected="true"] { background: var(--accent); color: #000; font-weight: 500; }
+.nx-chip strong { color: var(--font-color); font-weight: 500; }
+button.nx-chip { cursor: pointer; font: inherit; font-size: 12px; }
+button.nx-chip:hover:not([data-on], [aria-selected="true"]) { background: #3d3d3d; color: var(--font-color); }
+.nx-badge { display: inline-flex; align-items: center; border-radius: 20px; padding: 4px 11px;
+    font-size: 12px; color: var(--secondary-font-color); background: var(--secondary-card-bg-color); }
+.nx-badge[data-fresh] { background: var(--accent-dim); color: var(--accent); }
+input:not([type="checkbox"]), select, textarea { font: inherit; width: 100%; color: var(--font-color); background: #0d0d0d;
+    border: 0; border-radius: var(--radius-s); padding: 9px 11px; }
+select { width: auto; min-width: 0; }
+label > input, label > select { margin-top: 4px; }
+label { font-size: 12px; color: var(--secondary-font-color); display: block; }
+.nx-check { display: flex; align-items: flex-start; gap: 9px; font-size: 12.5px; color: var(--secondary-font-color); cursor: pointer; }
+.nx-check input { width: 16px; height: 16px; margin: 2px 0 0; accent-color: var(--accent); flex: none; }
+.nx-pose3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 10px 0; }
+details.nx-details { background: rgba(0, 0, 0, .35); border-radius: var(--radius-s); padding: 9px 12px; margin: 10px 0; }
+details.nx-details summary { cursor: pointer; font-size: 12.5px; color: var(--secondary-font-color); }
+pre.nx-code { font-family: var(--mono); font-size: 12px; color: var(--snow); background: #0d0d0d;
+    border-radius: var(--radius-m); padding: 13px 15px; margin: 8px 0 0;
+    overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 420px; overflow-y: auto; }
+.nx-record { display: flex; align-items: center; gap: 10px; padding: 9px 12px; margin: 4px 0;
+    background: rgba(255, 255, 255, .04); border-radius: var(--radius-s); font-size: 12.5px; }
+.nx-record .nx-rdesc { min-width: 0; flex: 1; }
+.nx-record .nx-rdesc strong { display: block; }
+.nx-record .nx-rdesc span { display: block; color: var(--secondary-font-color); font-size: 11.5px; overflow-wrap: anywhere; }
+.nx-record .nx-act { display: flex; gap: 6px; flex: none; }
+.nx-banner { display: flex; gap: 9px; background: rgba(255, 208, 145, .1);
+    border-radius: var(--radius-s); padding: 9px 12px; font-size: 12.5px; color: #ffd9a8; margin: 10px 0; }
+.nx-progress { height: 6px; border-radius: 6px; background: rgba(255, 255, 255, .08); overflow: hidden; margin: 8px 0; }
+.nx-progress i { display: block; height: 100%; border-radius: 6px; background: var(--accent); }
+.nx-progress[data-warn] i { background: var(--warning); }
+
+/* KPI-строка */
+.nx-kpis { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 14px; }
+
+/* режим работы */
+.nx-mode-btns { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 12px; }
+.nx-mode-btns button { min-height: 38px; }
+
+/* карта */
+.nx-mapbox { position: relative; border-radius: var(--radius-m); overflow: hidden; background: #0d0d0d;
+    box-shadow: var(--shadow-s); }
+#nx-ol-map { height: 58vh; min-height: 380px; outline: none; }
+.nx-mapbox .nx-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 12px; text-align: center; padding: 24px; }
+.nx-mapbox .nx-empty p { max-width: 560px; color: var(--secondary-font-color); font-size: 13.5px; line-height: 1.6; margin: 0; }
+.ol-control { background: none; }
+.ol-control button { background: var(--card-bg-color) !important; color: #fff !important; }
+.ol-control button:hover { background: #383838 !important; }
+.ol-scale-line { background: rgba(27, 27, 27, .8) !important; }
+.ol-scale-line-inner { color: #d7e8fa !important; border: 0; margin: 2px 4px; }
+body.nx-placing #nx-ol-map { cursor: crosshair; }
+
+/* инструменты */
+.nx-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 10px; }
+.nx-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+
+/* джойстик */
+.nx-drive-wrap { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.nx-drive-grid { display: grid; grid-template-columns: repeat(3, 88px); grid-auto-rows: 72px; gap: 10px; justify-content: center; }
+.nx-drive-grid button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    background: var(--secondary-card-bg-color); border-radius: 12px;
+    color: var(--font-color); font-size: 26px; line-height: 1; cursor: pointer; touch-action: manipulation; }
+.nx-drive-grid button:disabled { opacity: .45; cursor: default; }
+.nx-drive-grid button .drive-speed { font-size: 11px; color: var(--secondary-font-color); }
+.nx-drive-grid button.moving { background: rgba(0, 184, 0, .22); box-shadow: 0 0 0 2px var(--helper-green); }
+.nx-drive-grid #drive-stop { grid-area: 2 / 2; background: rgba(255, 77, 77, .14);
+    color: var(--helper-red); font-size: 17px; font-weight: 500; }
+#drive-panel:focus, #drive-panel:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.nx-drive-info { min-width: 220px; flex: 1; }
+.nx-drive-info p { font-size: 12.5px; color: var(--secondary-font-color); margin: 6px 0; }
+#drive-target, #drive-odometry { text-align: center; font-variant-numeric: tabular-nums; }
+#drive-command-result[data-error="true"] { color: var(--helper-red); }
+
+/* батарея */
+.nx-batt-wrap { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.nx-metrics { display: flex; gap: 10px; flex-wrap: wrap; }
+.nx-mchip { background: var(--secondary-card-bg-color); border-radius: var(--radius-m);
+    padding: 10px 14px; min-width: 108px; }
+.nx-mchip span { display: block; font-size: 11px; color: var(--secondary-font-color); }
+.nx-mchip strong { font-size: 16px; font-weight: 500; }
+.nx-soc-text { font-size: 21px; fill: #fff; }
+.nx-soc-sub { font-size: 11px; fill: var(--secondary-font-color); }
+canvas.nx-chart { width: 100%; height: 170px; display: block; touch-action: pan-y; }
+.nx-modesbar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; }
+.nx-modesbar i { display: block; }
+.nx-swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+
+/* кабинет */
+.nx-sw { position: relative; width: 38px; height: 21px; flex: none; display: inline-block; }
+.nx-sw input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.nx-sw i { position: absolute; inset: 0; border-radius: 20px; background: var(--secondary-card-bg-color); }
+.nx-sw i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%;
+    background: var(--secondary-font-color); transition: transform .15s, background .15s; }
+.nx-sw input:checked + i { background: var(--accent); }
+.nx-sw input:checked + i::after { transform: translateX(17px); background: #000; }
+.nx-switchrow { display: flex; align-items: center; gap: 10px; padding: 10px 0; font-size: 13px; }
+.nx-switchrow span:first-child { flex: 1; }
+.nx-jrow { display: flex; align-items: baseline; gap: 9px; padding: 8px 12px; margin: 4px 0;
+    background: rgba(255, 255, 255, .04); border-radius: var(--radius-s); font-size: 12.5px; }
+.nx-jrow .nx-jt { font-family: var(--mono); font-size: 11.5px; color: var(--secondary-font-color); flex: none; width: 42px; }
+.nx-rowline { display: flex; align-items: baseline; gap: 10px; padding: 6px 0; font-size: 13px; flex-wrap: wrap; }
+.nx-rowline .nx-l { color: var(--secondary-font-color); flex: none; width: 120px; font-size: 12px; }
+.nx-mono { font-family: var(--mono); font-size: 11.5px; color: var(--snow); overflow-wrap: anywhere; }
+.nx-tag { display: inline-block; background: var(--secondary-card-bg-color); border-radius: 20px; padding: 3px 11px;
+    font-size: 10.5px; color: var(--secondary-font-color); letter-spacing: .05em; }
+
+/* адаптив */
+@media (max-width: 900px) {
+    .nx-body { grid-template-columns: 1fr; }
+    .nx-nav { flex-direction: row; overflow-x: auto; padding: 8px; }
+    .nx-nav button { width: auto; white-space: nowrap; }
+    .nx-nav hr { display: none; }
+    .nx-content { padding: 12px 12px 26px; }
+    .nx-grid2 { grid-template-columns: 1fr; }
+    #nx-ol-map { height: 48vh; min-height: 320px; }
+}
+@media (max-width: 560px) {
+    .nx-pose3 { grid-template-columns: 1fr; }
+    .nx-drive-wrap { justify-content: center; }
+}

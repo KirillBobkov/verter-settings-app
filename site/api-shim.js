@@ -20,9 +20,14 @@
     let status = 'idle'; // idle | connecting | connected | reconnecting | error
     let statusError = '';
 
-    function loadCreds() { try { return localStorage.getItem(CREDS_KEY); } catch (e) { return null; } }
+    // Креды/адрес ищутся в localStorage, при отсутствии — в sessionStorage
+    // (опция кабинета нового интерфейса «хранить только в этой сессии»).
+    function loadCreds() {
+        try { return localStorage.getItem(CREDS_KEY) || sessionStorage.getItem(CREDS_KEY); } catch (e) { return null; }
+    }
     function effectiveUrl() {
-        try { return localStorage.getItem(URL_KEY) || CONFIG.natsWsUrl; } catch (e) { return CONFIG.natsWsUrl; }
+        try { return localStorage.getItem(URL_KEY) || sessionStorage.getItem(URL_KEY) || CONFIG.natsWsUrl; }
+        catch (e) { return CONFIG.natsWsUrl; }
     }
 
     function setStatus(next, error) {

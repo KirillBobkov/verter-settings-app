@@ -9,8 +9,8 @@ p { color: var(--muted); line-height: 1.5; margin: 8px 0; font-size: 13px; }
 a { color: #83dfff; text-underline-offset: 3px; }
 small { color: var(--accent); font-size: 11px; letter-spacing: .14em; }
 button, input, select { font: inherit; }
-button { padding: 9px 13px; border: 1px solid #526e86; border-radius: 7px; background: #26394e; color: inherit; cursor: pointer; }
-button:hover:not(:disabled) { background: #33516b; border-color: #75a5bc; }
+button { appearance: none; margin: 0; padding: 9px 13px; border: 0; border-radius: 7px; background: #26394e; color: inherit; font: inherit; cursor: pointer; }
+button:hover:not(:disabled) { background: #33516b; }
 button:disabled { opacity: .45; cursor: default; }
 button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 input:not([type='checkbox']), select { min-width: 0; width: 100%; padding: 10px; background: #101722; color: inherit; border: 1px solid #526880; border-radius: 6px; }
@@ -43,7 +43,7 @@ label { font-size: 13px; color: #c8d6e5; }
 #refresh-maps { white-space: nowrap; }
 .mode-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
 .mode-buttons button { min-height: 43px; overflow-wrap: anywhere; }
-.mode-buttons button[data-current='true'] { color: #8ee8d1; border-color: #4e9785; background: #1b403c; opacity: 1; }
+.mode-buttons button[data-current='true'] { color: #8ee8d1; background: #1b403c; opacity: 1; }
 .check-label { display: flex; align-items: flex-start; gap: 9px; margin-top: 12px; line-height: 1.5; }
 .check-label input { flex: none; width: 17px; height: 17px; margin: 2px 0 0; }
 .availability { margin-top: 12px; padding: 10px 12px; background: #101c28; border-radius: 7px; }
@@ -64,7 +64,7 @@ label { font-size: 13px; color: #c8d6e5; }
 .drive-left { grid-area: 2/1; }
 .drive-right { grid-area: 2/3; }
 .drive-backward { grid-area: 3/2; }
-#drive-stop { grid-area: 2/2; background: #78343c; border-color: #ee7782; gap: 5px; font-size: 17px; }
+#drive-stop { grid-area: 2/2; background: #78343c; gap: 5px; font-size: 17px; }
 #drive-stop:hover { background: #98414c; }
 .drive-arrow { font-size: 23px; line-height: 1; }
 .drive-speed { font-size: 12px; white-space: nowrap; }

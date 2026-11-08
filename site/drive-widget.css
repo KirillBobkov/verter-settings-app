@@ -37,7 +37,7 @@
     min-height: 0;
     padding: 1px;
     margin: 0;
-    border: 1px solid #57718d;
+    border: 0;
     border-radius: 5px;
     background: #26374b;
     color: #e4edf7;
@@ -56,7 +56,6 @@
 }
 .drive-widget button.moving {
     background: #155c4c;
-    border-color: #55e6c1;
 }
 .drive-widget button:focus-visible {
     outline: 2px solid #55e6c1;
@@ -71,7 +70,6 @@
 .drive-widget .widget-stop {
     grid-area: 2 / 2;
     background: #59323b;
-    border-color: #b26776;
 }
 .drive-widget .widget-right {
     grid-area: 2 / 3;

@@ -3,122 +3,404 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Verter · Состояние робота</title>
-        <link rel="stylesheet" href="style.css" />
+        <title>Verter · Консоль робота (новый интерфейс)</title>
+        <link rel="stylesheet" href="lib/ol.css" />
+        <link rel="stylesheet" href="next.css" />
+        <style>#vter-nats-dot{display:none!important}</style>
     </head>
     <body>
-        <main>
-            <header class="page-header">
-                <div>
-                    <small>VERTER / КОНСОЛЬ РОБОТА</small>
-                    <h1>Состояние робота</h1>
-                    <p id="robot-identity">Локальное управление и наблюдение</p>
-                </div>
-                <div class="connection-area">
-                    <span id="connection" role="status">Подключение…</span>
-                    <button id="refresh" type="button">Обновить</button>
-                </div>
-            </header>
-
-            <div class="summary-grid" aria-label="Основное состояние">
-                <div class="summary-card"><span>Режим</span><strong id="summary-mode">—</strong><small id="summary-mode-detail">Ожидание состояния</small></div>
-                <div class="summary-card"><span>Батарея</span><strong id="summary-battery">—</strong><small id="summary-charge-state">Ожидание BMS</small></div>
-                <div class="summary-card"><span>Данные датчиков</span><strong id="summary-sensors">—</strong><small id="summary-sensors-detail">Лидар · IMU · одометрия</small></div>
-                <div class="summary-card"><span>Обновление</span><strong id="summary-age">—</strong><small id="summary-age-detail">Нет свежего состояния</small></div>
-            </div>
-
-            <nav class="quick-links" aria-label="Окна наблюдения">
-                <a href="map.html" target="_blank" rel="noopener"><strong>Карта ↗</strong><span>Локализация, точки и препятствия</span></a>
-                <a id="lidar-window" href="#" target="_blank" rel="noopener"><strong>Лидар ↗</strong><span>Скан вокруг корпуса</span></a>
-                <a id="camera-window" href="#" target="_blank" rel="noopener"><strong>Камера ↗</strong><span>Изображение и глубина</span></a>
-                <a href="battery-history.html" target="_blank" rel="noopener"><strong>История батареи ↗</strong><span>Графики и экспорт показаний</span></a>
+        <header class="nx-topbar">
+            <span class="nx-brand"><i></i>VERTER</span>
+            <span class="nx-badge mono" id="nx-robot">verter_01</span>
+            <span class="nx-spacer"></span>
+            <span class="nx-pill"><span class="nx-dot" data-s="off" id="nx-conn-dot"></span><span id="nx-conn-text">Не подключён</span></span>
+            <span class="nx-clock" id="nx-clock">—</span>
+            <button id="nx-ui-toggle" type="button" title="Переключить на классический интерфейс">
+                <span class="nx-dot"></span>Новый интерфейс
+            </button>
+        </header>
+        <div class="nx-body">
+            <nav class="nx-nav" aria-label="Разделы">
+                <button type="button" data-nx-nav="map" aria-current="page">Карта</button>
+                <button type="button" data-nx-nav="drive">Управление</button>
+                <button type="button" data-nx-nav="battery">Батарея</button>
+                <button type="button" data-nx-nav="cabinet">Кабинет</button>
+                <hr />
+                <button type="button" data-nx-nav="eng" data-nx-eng>Инженер</button>
             </nav>
+            <main class="nx-content">
 
-            <div class="operator-grid">
-                <section class="card mode-card" aria-labelledby="mode-title">
-                    <div class="card-heading"><h2 id="mode-title">Режим работы</h2><span id="mode-badge" class="badge">Неизвестно</span></div>
-                    <p id="mode" role="status">Состояние пока не получено.</p>
-                    <p id="mode-help" class="context-help">Дождитесь подключения к роботу.</p>
-                    <label for="map">Сохранённая карта</label>
-                    <div class="map-select-row">
-                        <select id="map"><option value="">Выберите карту</option></select>
-                        <button id="refresh-maps" type="button" title="Обновить список сохранённых карт">↻ <span>Карты</span></button>
+                <section data-nx-sec="map">
+                    <h1 style="font-size:20px;margin:2px 0 12px">Карта робота</h1>
+                    <div class="nx-kpis" aria-label="Сводка состояния">
+                        <span class="nx-chip">Датчики: <strong id="nx-kpi-sens">—</strong></span>
+                        <span class="nx-chip">Обновление: <strong id="nx-kpi-age">—</strong></span>
                     </div>
-                    <p id="map-status" class="muted">Загрузка списка карт…</p>
-                    <div class="mode-buttons buttons" aria-label="Выбрать режим">
-                        <button data-mode="idle" type="button" disabled>Ожидание</button>
-                        <button data-mode="mapping" type="button" disabled>Картографирование</button>
-                        <button data-mode="localization" type="button" disabled>Локализация</button>
-                        <button data-mode="navigation" type="button" disabled>Навигация</button>
+                    <div class="nx-card">
+                        <p class="nx-h">Режим работы</p>
+                        <div class="nx-mode-btns">
+                            <button type="button" class="nx-chip nx-mode-btn" data-mode="idle" disabled>Ожидание</button>
+                            <button type="button" class="nx-chip nx-mode-btn" data-mode="mapping" disabled>Картографирование</button>
+                            <button type="button" class="nx-chip nx-mode-btn" data-mode="localization" disabled>Локализация</button>
+                            <button type="button" class="nx-chip nx-mode-btn" data-mode="navigation" disabled>Навигация</button>
+                        </div>
+                        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+                            <label>Карта для локализации/навигации
+                                <select id="nx-mode-map" style="min-width:180px"><option value="">Выберите карту</option></select>
+                            </label>
+                            <button type="button" class="nx-btn" id="nx-maps-refresh" title="Обновить список сохранённых карт">↻ Карты</button>
+                            <label class="nx-check" id="nx-discard-row" hidden><input type="checkbox" id="nx-discard" />
+                                <span>Подтверждаю завершение сессии картографирования. Нужную карту сохраняю заранее.</span></label>
+                        </div>
+                        <p class="nx-note" id="nx-mode-hint" role="status">Дождитесь подключения к роботу.</p>
+                        <p class="nx-note" id="nx-mode-result" role="status" aria-live="polite"></p>
                     </div>
-                    <label id="discard-row" class="check-label" hidden>
-                        <input id="discard" type="checkbox" />
-                        <span>Подтверждаю завершение сессии картографирования. Нужную карту сохраняю в окне карты заранее.</span>
-                    </label>
-                    <p id="gate" class="availability" role="status">Проверка доступности…</p>
-                    <p id="mode-result" class="action-result" role="status" aria-live="polite"></p>
-                    <p class="muted">Переключайте режим на неподвижном роботе. Подтверждение появится перед отправкой запроса.</p>
+                    <div class="nx-toolbar" style="margin:0 0 10px">
+                        <button type="button" class="nx-btn" id="nx-fit-map" disabled>Вся карта</button>
+                        <button type="button" class="nx-btn" id="nx-fit-robot" disabled>К роботу</button>
+                        <label class="nx-check"><input type="checkbox" id="nx-follow" disabled /><span>Следовать</span></label>
+                        <label class="nx-check"><input type="checkbox" id="nx-show-scan" checked /><span>Лидар</span></label>
+                        <span class="nx-chip" style="margin-left:auto"><span class="nx-dot" data-s="off" id="nx-map-dot"></span><span id="nx-map-status">Подключение…</span></span>
+                    </div>
+                    <div class="nx-mapbox">
+                        <div id="nx-ol-map" tabindex="0" aria-label="Карта помещения в координатах map"></div>
+                        <div class="nx-empty" id="nx-map-empty" hidden>
+                            <p id="nx-map-empty-text">Ожидание карты…</p>
+                            <button type="button" class="nx-btn nx-btn-primary" id="nx-map-empty-btn">К выбору карты и локализации</button>
+                        </div>
+                    </div>
+                    <div class="nx-grid2" style="margin-top:14px">
+                        <div class="nx-card" style="margin:0">
+                            <p class="nx-h">Наблюдения</p>
+                            <p class="nx-note" style="margin-top:0" id="nx-pose-info">Положение робота неизвестно</p>
+                            <p class="nx-note" id="nx-scan-info">Облако лидара пока не получено</p>
+                            <p class="nx-note" id="nx-map-info">Параметры карты пока не получены</p>
+                            <p class="nx-note" id="nx-cursor-info">Координаты курсора: —</p>
+                            <p class="nx-note" id="nx-scan-quality" style="color:var(--warning)" role="status"></p>
+                            <p class="nx-note" style="font-size:11.5px">Свежесть: метаданные ≤3,5 с; поза и скан ≤1,5 с; облако ≤1800 точек. Перетаскивание карты снимает «Следовать».</p>
+                        </div>
+                        <div style="min-width:0;display:grid;gap:14px;align-content:start">
+                            <div class="nx-card" style="margin:0">
+                                <p class="nx-h">Заметка оператора</p>
+                                <input type="text" id="nx-note" maxlength="500" placeholder="Например: карта проверена, робот на базе" />
+                                <div class="nx-actions"><button type="button" class="nx-btn nx-btn-primary" id="nx-note-save" disabled>Сохранить заметку</button></div>
+                                <p class="nx-note" id="nx-note-result" role="status" aria-live="polite"></p>
+                            </div>
+                            <div class="nx-card" style="margin:0">
+                                <p class="nx-h">Инструменты карты</p>
+                                <div class="nx-tabs" role="tablist" aria-label="Инструменты">
+                                    <button type="button" class="nx-chip" data-nx-tab="loc" aria-selected="true">Локализация</button>
+                                    <button type="button" class="nx-chip" data-nx-tab="points">Точки</button>
+                                    <button type="button" class="nx-chip" data-nx-tab="routes">Маршруты</button>
+                                    <button type="button" class="nx-chip" data-nx-tab="layers">Слои</button>
+                                    <button type="button" class="nx-chip" data-nx-tab="save">Сохранение</button>
+                                </div>
+
+                                <div data-nx-panel="loc">
+                                    <label>Сохранённая карта
+                                        <select id="nx-loc-map"><option value="">Загрузка списка…</option></select>
+                                    </label>
+                                    <div class="nx-actions">
+                                        <button type="button" class="nx-btn" id="nx-loc-refresh">Обновить список</button>
+                                        <button type="button" class="nx-btn nx-btn-primary" id="nx-loc-start" disabled>Запустить локализацию</button>
+                                    </div>
+                                    <p class="nx-note" id="nx-loc-mode-info">Проверка состояния режима…</p>
+                                    <p class="nx-note" id="nx-loc-status" role="status">Локализация пока не получена</p>
+                                    <p class="nx-note" id="nx-loc-pose">Текущее положение: —</p>
+                                    <p class="nx-note" id="nx-loc-msg" role="status" aria-live="polite"></p>
+                                </div>
+
+                                <div data-nx-panel="loc" style="margin-top:12px">
+                                    <p class="nx-h">Начальное положение</p>
+                                    <p class="nx-note" style="margin-top:0">Укажите положение робота на этой карте. Для направления протяните указатель от точки или введите угол. Отправка начальной позы и подтверждение совпадения выполняются отдельными кнопками.</p>
+                                    <div class="nx-pose3">
+                                        <label>X, м<input id="nx-init-x" type="number" step="0.001" /></label>
+                                        <label>Y, м<input id="nx-init-y" type="number" step="0.001" /></label>
+                                        <label>Угол, °<input id="nx-init-yaw" type="number" step="0.1" value="0" /></label>
+                                    </div>
+                                    <div class="nx-actions">
+                                        <button type="button" class="nx-btn" id="nx-init-place" disabled>Указать на карте</button>
+                                        <button type="button" class="nx-btn nx-btn-primary" id="nx-init-apply" disabled>Применить начальную позу…</button>
+                                    </div>
+                                    <details class="nx-details">
+                                        <summary>Начальная неопределённость</summary>
+                                        <div class="nx-pose3">
+                                            <label>σ положения, м<input id="nx-std-xy" type="number" min="0.01" max="10" step="0.01" value="0.25" /></label>
+                                            <label>σ угла, °<input id="nx-std-yaw" type="number" min="1" max="180" step="1" value="15" /></label>
+                                        </div>
+                                    </details>
+                                    <label class="nx-check"><input type="checkbox" id="nx-align" />
+                                        <span>Я визуально проверил совпадение робота и облака лидара с картой</span></label>
+                                    <div class="nx-actions"><button type="button" class="nx-btn nx-btn-primary" id="nx-loc-confirm" disabled>Подтвердить положение…</button></div>
+                                    <p class="nx-note">Уменьшение ковариации само по себе не подтверждает правильное положение.</p>
+                                    <p class="nx-note" id="nx-place-info" role="status">Выбор на карте доступен только для текущей сохранённой карты в локализации.</p>
+                                    <button type="button" class="nx-btn" id="nx-place-cancel" hidden>Отменить выбор на карте</button>
+                                </div>
+
+                                <div data-nx-panel="points" hidden>
+                                    <p class="nx-h">Именованные точки</p>
+                                    <p class="nx-note" style="margin-top:0">Координаты задаются в метрах в системе выбранной карты. Сохранение точки не перемещает робота.</p>
+                                    <div class="nx-pose3" style="grid-template-columns:1fr 1fr">
+                                        <label>ID<input id="nx-pt-id" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}" placeholder="point_1" required /></label>
+                                        <label>Название<input id="nx-pt-label" maxlength="100" placeholder="У входа" required /></label>
+                                    </div>
+                                    <div class="nx-pose3">
+                                        <label>X, м<input id="nx-pt-x" type="number" step="0.001" /></label>
+                                        <label>Y, м<input id="nx-pt-y" type="number" step="0.001" /></label>
+                                        <label>Угол, °<input id="nx-pt-yaw" type="number" step="0.1" value="0" /></label>
+                                    </div>
+                                    <div class="nx-actions">
+                                        <button type="button" class="nx-btn" id="nx-pt-place" disabled>Указать на карте</button>
+                                        <button type="button" class="nx-btn nx-btn-primary" id="nx-pt-save" disabled>Сохранить точку</button>
+                                        <button type="button" class="nx-btn" id="nx-pt-cur" disabled>Сохранить текущее положение</button>
+                                        <button type="button" class="nx-btn" id="nx-pt-new">Новая точка</button>
+                                    </div>
+                                    <p class="nx-note" id="nx-pt-note">Ожидание списка точек…</p>
+                                    <div id="nx-pt-list"></div>
+                                </div>
+
+                                <div data-nx-panel="routes" hidden>
+                                    <p class="nx-h">Описания маршрутов</p>
+                                    <p class="nx-note" style="margin-top:0">Редактор порядка точек. Линии на карте показывают последовательность, а не рассчитанный путь. Запуск маршрута пока не реализован.</p>
+                                    <div class="nx-pose3" style="grid-template-columns:1fr 1fr">
+                                        <label>ID<input id="nx-rt-id" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}" placeholder="route_1" required /></label>
+                                        <label>Название<input id="nx-rt-label" maxlength="100" placeholder="Обход помещения" required /></label>
+                                    </div>
+                                    <label>Тип описания
+                                        <select id="nx-rt-kind">
+                                            <option value="visit">Посетить точки · будущие остановки</option>
+                                            <option value="through">Пройти через точки · будущее прохождение</option>
+                                        </select>
+                                    </label>
+                                    <div class="nx-actions">
+                                        <label style="flex:1;min-width:160px">Добавить точку
+                                            <select id="nx-rt-point"></select>
+                                        </label>
+                                        <button type="button" class="nx-btn" id="nx-rt-add" disabled>Добавить в конец</button>
+                                    </div>
+                                    <ol id="nx-rt-order" style="padding-left:20px;font-size:12.5px"></ol>
+                                    <div class="nx-actions">
+                                        <button type="button" class="nx-btn nx-btn-primary" id="nx-rt-save" disabled>Сохранить описание маршрута</button>
+                                        <button type="button" class="nx-btn" id="nx-rt-new">Новый маршрут</button>
+                                    </div>
+                                    <p class="nx-note" id="nx-rt-note">Ожидание списка маршрутов…</p>
+                                    <div id="nx-rt-list"></div>
+                                </div>
+
+                                <div data-nx-panel="layers" hidden>
+                                    <p class="nx-h">Препятствия Nav2</p>
+                                    <p class="nx-note" style="margin-top:0">Слои costmap (лидар + камера + УЗ) только читают данные Nav2 и видны в режиме навигации.</p>
+                                    <p class="nx-note" id="nx-costmap-status" role="status">Costmap недоступен: маршрут /api/costmap не заведён в прослойке нового интерфейса (известное ограничение, см. план §9.3).</p>
+                                    <label class="nx-check"><input type="checkbox" disabled /><span>Локальная costmap</span></label>
+                                    <label class="nx-check"><input type="checkbox" disabled /><span>Глобальная costmap</span></label>
+                                    <p class="nx-note">Легенда: <span class="nx-swatch" style="background:var(--costmap-obstacle)"></span> препятствие · <span class="nx-swatch" style="background:var(--costmap-inscribed)"></span> высокая стоимость · <span class="nx-swatch" style="background:var(--costmap-inflation)"></span> градиент.</p>
+                                </div>
+
+                                <div data-nx-panel="save" hidden>
+                                    <label>Имя карты<input id="nx-save-name" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}" placeholder="room_1" /></label>
+                                    <div class="nx-actions"><button type="button" class="nx-btn nx-btn-primary" id="nx-save-btn" disabled>Сохранить карту и граф SLAM</button></div>
+                                    <p class="nx-note" id="nx-save-info" role="status">Сохранение доступно в режиме картографирования.</p>
+                                    <p class="nx-note">Имя: латиница, цифры, _ и -. Сохраняйте после остановки робота оператором. Создаются YAML/PGM и граф SLAM. Сохранение не завершает режим.</p>
+                                    <details class="nx-details">
+                                        <summary>Статусы сохранения (как в оригинале)</summary>
+                                        <p class="nx-note">Сохраняется &lt;имя&gt;: этап… · Сохранено: &lt;имя&gt; · карта и граф SLAM</p>
+                                        <p class="nx-note">Сохранение не завершено: ошибка · YAML/PGM уже созданы; выберите новое имя для повторной попытки</p>
+                                        <p class="nx-note">Гейты: занято → отключено → не mapping → карта не свежая → пустое/невалидное имя</p>
+                                    </details>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
-                <section id="drive-panel" class="card drive-card" tabindex="0" role="group" aria-labelledby="drive-title" aria-describedby="drive-keyboard-help">
-                    <div class="card-heading"><h2 id="drive-title">Ручное управление</h2><span class="key-hint">↑ ← ↓ → / Space</span></div>
-                    <p id="drive-status" role="status">Проверка связи…</p>
-                    <div class="drive-pad" aria-label="Управление скоростью робота">
-                        <button type="button" class="drive-forward" data-drive="forward" aria-keyshortcuts="ArrowUp" disabled aria-label="Вперёд: увеличить скорость на 0,01 м/с"><span class="drive-arrow">↑</span><span>Вперёд</span><strong class="drive-speed">—</strong></button>
-                        <button type="button" class="drive-left" data-drive="left" aria-keyshortcuts="ArrowLeft" disabled aria-label="Влево: увеличить поворот влево на 0,05 рад/с"><span class="drive-arrow">←</span><span>Влево</span><strong class="drive-speed">—</strong></button>
-                        <button type="button" id="drive-stop" aria-keyshortcuts="Space" aria-label="Стоп: обнулить линейную и угловую скорость">■<strong>СТОП</strong></button>
-                        <button type="button" class="drive-right" data-drive="right" aria-keyshortcuts="ArrowRight" disabled aria-label="Вправо: увеличить поворот вправо на 0,05 рад/с"><span class="drive-arrow">→</span><span>Вправо</span><strong class="drive-speed">—</strong></button>
-                        <button type="button" class="drive-backward" data-drive="backward" aria-keyshortcuts="ArrowDown" disabled aria-label="Назад: уменьшить скорость на 0,01 м/с"><span class="drive-arrow">↓</span><span>Назад</span><strong class="drive-speed">—</strong></button>
+                <section data-nx-sec="drive" hidden>
+                    <h1 style="font-size:20px;margin:2px 0 12px">Ручное управление</h1>
+                    <div class="nx-card">
+                        <section id="drive-panel" tabindex="0" role="group" aria-label="Ручное управление" aria-describedby="drive-keyboard-help">
+                            <div class="nx-drive-wrap">
+                                <div class="nx-drive-grid">
+                                    <button type="button" data-drive="forward" style="grid-area:1/2" disabled aria-keyshortcuts="ArrowUp" aria-label="Вперёд: +0,01 м/с">↑<span class="drive-speed">—</span></button>
+                                    <button type="button" data-drive="left" style="grid-area:2/1" disabled aria-keyshortcuts="ArrowLeft" aria-label="Влево: +0,05 рад/с">←<span class="drive-speed">—</span></button>
+                                    <button type="button" id="drive-stop" aria-keyshortcuts="Space" aria-label="Стоп: обнулить скорости">■<span>СТОП</span></button>
+                                    <button type="button" data-drive="right" style="grid-area:2/3" disabled aria-keyshortcuts="ArrowRight" aria-label="Вправо: −0,05 рад/с">→<span class="drive-speed">—</span></button>
+                                    <button type="button" data-drive="backward" style="grid-area:3/2" disabled aria-keyshortcuts="ArrowDown" aria-label="Назад: −0,01 м/с">↓<span class="drive-speed">—</span></button>
+                                </div>
+                                <div class="nx-drive-info">
+                                    <p id="drive-status" role="status">Проверка связи…</p>
+                                    <p id="drive-target"></p>
+                                    <p id="drive-odometry">Фактическая скорость неизвестна</p>
+                                    <p id="drive-command-result" role="status" aria-live="polite"></p>
+                                    <p id="drive-keyboard-help">Сначала выделите эту панель. ↑/↓ — шаг 0,01 м/с, ←/→ — 0,05 рад/с, Space — стоп. Отпускание стрелки не останавливает робота.</p>
+                                    <p style="font-size:12px">Лимиты: 0,5 м/с и 0,5 рад/с. При потере связи действует таймаут 1 с. Ручное управление не учитывает costmap. СТОП — программная команда, не аппаратный выключатель.</p>
+                                </div>
+                            </div>
+                        </section>
                     </div>
-                    <p id="drive-target"></p>
-                    <p id="drive-odometry">Фактическая скорость неизвестна</p>
-                    <p id="drive-command-result" class="action-result" role="status" aria-live="polite"></p>
-                    <p id="drive-keyboard-help" class="drive-help">Сначала выделите эту панель. ↑/↓ — шаг 0,01 м/с, ←/→ — 0,05 рад/с, Space — стоп. Отпускание стрелки не останавливает робота.</p>
-                    <p class="drive-help muted">Лимиты: 0,5 м/с и 0,5 рад/с. При потере связи действует таймаут 1 с. Ручное управление не учитывает costmap.</p>
                 </section>
-            </div>
 
-            <section id="battery" class="card" aria-labelledby="battery-title">
-                <div class="card-heading battery-heading"><h2 id="battery-title">Батарея</h2><span id="battery-status" class="badge">Ожидание данных</span><a href="battery-history.html" target="_blank" rel="noopener">История и экспорт ↗</a></div>
-                <div class="battery-overview">
-                    <div class="battery-soc-block"><strong id="battery-main-soc">—</strong><span id="battery-charge-state">Неизвестно</span><meter id="battery-gauge" min="0" max="100" value="0" hidden aria-label="Процент заряда"></meter></div>
-                    <div id="battery-metrics" class="battery-metrics"></div>
-                </div>
-                <p id="battery-age" class="muted">Измерения пока не получены.</p>
-                <details id="battery-details" class="inline-details">
-                    <summary>Ячейки, температуры и сведения о BMS</summary>
-                    <p id="battery-device">BLE → NATS</p>
-                    <div id="battery-extra" class="battery-metrics"></div>
-                    <h3>Ячейки</h3>
-                    <div id="battery-cells" class="battery-cells"></div>
-                    <p id="battery-detail"></p>
-                </details>
-            </section>
+                <section data-nx-sec="battery" hidden>
+                    <h1 style="font-size:20px;margin:2px 0 12px">Батарея</h1>
+                    <div class="nx-card">
+                        <div class="nx-batt-wrap">
+                            <svg width="124" height="124" viewBox="0 0 124 124" role="img" aria-label="Уровень заряда">
+                                <circle cx="62" cy="62" r="52" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="10"/>
+                                <circle id="nx-soc-arc" cx="62" cy="62" r="52" fill="none" stroke="#c8ed00" stroke-width="10"
+                                    stroke-linecap="round" stroke-dasharray="0 326.7" transform="rotate(-90 62 62)"/>
+                                <text id="nx-soc-text" class="nx-soc-text" x="62" y="60" text-anchor="middle">—</text>
+                                <text class="nx-soc-sub" x="62" y="79" text-anchor="middle">заряд</text>
+                            </svg>
+                            <div style="min-width:0;flex:1">
+                                <div class="nx-toolbar" style="margin-bottom:8px">
+                                    <span class="nx-badge" id="nx-batt-badge">Ожидание данных</span>
+                                    <span class="nx-badge" id="nx-batt-charge">Состояние заряда неизвестно</span>
+                                </div>
+                                <div class="nx-metrics" id="nx-batt-metrics"></div>
+                                <p class="nx-note" id="nx-batt-age">Измерения пока не получены.</p>
+                            </div>
+                        </div>
+                        <details class="nx-details">
+                            <summary>Ячейки, температуры и сведения о BMS</summary>
+                            <p class="nx-note mono" id="nx-batt-device">BLE → NATS</p>
+                            <div class="nx-metrics" id="nx-batt-extra"></div>
+                            <p class="nx-h">Ячейки</p>
+                            <div class="nx-metrics" id="nx-batt-cells"></div>
+                            <p class="nx-note" id="nx-batt-detail"></p>
+                        </details>
+                    </div>
+                    <div class="nx-card">
+                        <p class="nx-h">История аккумулятора</p>
+                        <div class="nx-toolbar">
+                            <label>Период
+                                <select id="nx-period">
+                                    <option value="3600">Час</option>
+                                    <option value="21600">6 часов</option>
+                                    <option value="86400">Сутки</option>
+                                    <option value="259200">3 дня</option>
+                                    <option value="604800" selected>Неделя</option>
+                                </select>
+                            </label>
+                            <button type="button" class="nx-btn" id="nx-hist-refresh">Обновить</button>
+                            <label class="nx-check"><input type="checkbox" id="nx-hist-auto" checked /><span>Обновлять каждые 30 секунд</span></label>
+                            <span class="nx-chip" style="margin-left:auto"><span class="nx-dot" data-s="off" id="nx-hist-dot"></span><span id="nx-hist-conn">Загрузка…</span></span>
+                        </div>
+                        <p class="nx-note" id="nx-soc-summary">Последний сохранённый заряд: —</p>
+                        <p class="nx-note" id="nx-hist-cov"></p>
+                        <canvas id="nx-chart" class="nx-chart" aria-label="График SOC за период"></canvas>
+                        <p class="nx-note" id="nx-chart-tip">Наведите указатель или коснитесь: среднее, минимум, максимум и последнее значение</p>
+                        <p class="nx-h">Зарядка и разрядка</p>
+                        <div class="nx-modesbar" role="img" aria-label="Режимы зарядки за период"><i id="nx-modes-bar"></i></div>
+                        <div class="nx-toolbar" style="margin-top:10px">
+                            <span class="nx-chip"><span class="nx-swatch" style="background:var(--charge-charging)"></span>Зарядка</span>
+                            <span class="nx-chip"><span class="nx-swatch" style="background:var(--charge-discharging)"></span>Разрядка</span>
+                            <span class="nx-chip"><span class="nx-swatch" style="background:var(--charge-idle)"></span>Ток ≈ 0</span>
+                            <span class="nx-chip"><span class="nx-swatch" style="background:var(--charge-unknown)"></span>Нет данных</span>
+                        </div>
+                        <p class="nx-note" id="nx-modes-tip">Наведите указатель: доли режимов в интервале.</p>
+                        <div class="nx-actions">
+                            <a id="nx-exp-csv" class="nx-btn" href="/api/battery/export?format=csv&amp;period_s=604800">Скачать CSV</a>
+                            <a id="nx-exp-txt" class="nx-btn" href="/api/battery/export?format=txt&amp;period_s=604800">Скачать TXT</a>
+                        </div>
+                        <p class="nx-note">Запись каждые 10 секунд и при смене режима. Линия — среднее, полоса — минимум–максимум. Пропуски — нет свежих данных. Время — в часовом поясе браузера. Экспорт содержит исходные снимки (58 колонок), метки UTC и Unix seconds.</p>
+                    </div>
+                </section>
 
-            <section class="card notes-card" aria-labelledby="note-title">
-                <h2 id="note-title">Заметка оператора</h2>
-                <div class="note-row"><label class="sr-only" for="note">Заметка оператора</label><input id="note" maxlength="500" placeholder="Например: карта проверена, робот на базе" /><button id="save" type="button" disabled>Сохранить заметку</button></div>
-                <p id="note-result" class="action-result" role="status" aria-live="polite"></p>
-                <p class="muted">Сохраняется текст заметки. Параметры робота не меняются.</p>
-            </section>
+                <section data-nx-sec="cabinet" hidden>
+                    <h1 style="font-size:20px;margin:2px 0 12px">Кабинет оператора</h1>
+                    <div class="nx-grid2">
+                        <div style="min-width:0">
+                            <div class="nx-card">
+                                <p class="nx-h">Оператор</p>
+                                <div class="nx-rowline"><span class="nx-l">Имя</span><span id="nx-op-name">—</span></div>
+                                <div class="nx-rowline"><span class="nx-l">Из кредов</span><span class="nx-mono" id="nx-op-sub">—</span></div>
+                                <div class="nx-rowline"><span class="nx-l">Срок действия</span><span id="nx-exp-date">—</span>
+                                    <span class="nx-tag" id="nx-exp-left"></span></div>
+                                <div class="nx-progress" id="nx-exp-bar" style="max-width:320px"><i id="nx-exp-fill" style="width:0"></i></div>
+                                <div class="nx-banner" id="nx-exp-banner" hidden>Запросите новые креды у администратора заранее — старые перестанут работать в указанную дату.</div>
+                            </div>
+                            <div class="nx-card">
+                                <p class="nx-h">Подключение</p>
+                                <div class="nx-rowline"><span class="nx-l">Хаб</span><span class="nx-mono" id="nx-hub">—</span></div>
+                                <div class="nx-rowline"><span class="nx-l">Робот</span><span class="nx-mono" id="nx-robot-id">—</span></div>
+                                <div class="nx-rowline"><span class="nx-l">Статус</span>
+                                    <span class="nx-pill"><span class="nx-dot" data-s="off" id="nx-cab-dot"></span><span id="nx-cab-status">Не подключён</span></span></div>
+                                <div class="nx-actions">
+                                    <button type="button" class="nx-btn" id="nx-cab-ping">Проверить связь</button>
+                                    <span class="nx-mono" id="nx-cab-ping-res" role="status"></span>
+                                </div>
+                            </div>
+                            <div class="nx-card">
+                                <p class="nx-h">Креды</p>
+                                <p class="nx-note" style="margin-top:0">Креды выдаёт администратор хаба; хранятся только в этом браузере и никому не пересылайте их — они дают управление роботом.</p>
+                                <label>Сервер (wss://…) — можно оставить пустым
+                                    <input type="text" id="nx-creds-url" placeholder="wss://verter-proxy.duckdns.org" />
+                                </label>
+                                <label style="margin-top:10px">Креды (содержимое файла ui-имя.creds)
+                                    <textarea id="nx-creds-input" spellcheck="false" style="min-height:110px;font-family:var(--mono);font-size:12px"
+                                        placeholder="-----BEGIN NATS USER JWT-----&#10;eyJ…&#10;------END NATS USER JWT------&#10;&#10;-----BEGIN USER NKEY SEED-----&#10;SU…&#10;------END USER NKEY SEED------"></textarea>
+                                </label>
+                                <p class="nx-note" id="nx-creds-err" data-error="true" role="alert" hidden>Креды неполные: нужны блоки NATS USER JWT и USER NKEY SEED.</p>
+                                <div class="nx-actions">
+                                    <button type="button" class="nx-btn nx-btn-primary" id="nx-creds-save">Сохранить и подключиться</button>
+                                    <button type="button" class="nx-btn nx-btn-danger" id="nx-creds-forget">Забыть на устройстве</button>
+                                </div>
+                                <label class="nx-check" style="margin-top:10px"><input type="checkbox" id="nx-session-only" />
+                                    <span>Хранить только в этой сессии (не писать в localStorage)</span></label>
+                                <p class="nx-note mono" id="nx-storage-note">хранение: localStorage</p>
+                            </div>
+                        </div>
+                        <div style="min-width:0">
+                            <div class="nx-card">
+                                <p class="nx-h">Интерфейс</p>
+                                <label class="nx-switchrow"><span>Автообновление данных</span>
+                                    <span class="nx-sw"><input type="checkbox" id="nx-pref-auto" checked /><i></i></span></label>
+                                <label class="nx-switchrow"><span>Звук при разряде ниже 20 % (зарезервировано)</span>
+                                    <span class="nx-sw"><input type="checkbox" id="nx-pref-sound" checked /><i></i></span></label>
+                                <label class="nx-switchrow"><span>Показывать инженерный раздел</span>
+                                    <span class="nx-sw"><input type="checkbox" id="nx-pref-eng" checked /><i></i></span></label>
+                                <div class="nx-actions"><button type="button" class="nx-btn" id="nx-prefs-reset">Сбросить предпочтения</button></div>
+                            </div>
+                            <div class="nx-card">
+                                <p class="nx-h" style="justify-content:space-between">Журнал · локально
+                                    <button type="button" class="nx-btn" id="nx-journal-clear" style="padding:4px 10px;font-size:11.5px">Очистить</button></p>
+                                <div id="nx-journal"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
-            <details id="diagnostics" class="card diagnostics">
-                <summary>Диагностика и API <span>Датчики, полный JSON и словарь NATS</span></summary>
-                <div class="diagnostics-content">
-                    <div class="api-tools"><button id="ping" type="button">Проверить связь</button><button id="schema" type="button">Получить словарь API</button><span id="api-result" role="status"></span></div>
-                    <details id="sources-details"><summary>Метрики и состояния датчиков</summary><div id="metrics"></div></details>
-                    <details id="state-details"><summary>Полный JSON состояния</summary><pre id="state">Состояние пока не получено</pre></details>
-                    <details id="contracts-details"><summary>Subjects и KV-ключи NATS</summary><div id="contract-values"></div></details>
-                    <details id="response-details"><summary>Последний ответ API</summary><pre id="response">Ответ команды появится здесь</pre></details>
-                </div>
-            </details>
-            <footer>Отладочный интерфейс локальной сети · карта, камера и лидар открываются в отдельных окнах.</footer>
-        </main>
-        <script src="lib/nats-core.iife.js"></script>
-        <script src="config.js"></script>
-        <script src="nats-api-core.js"></script>
-        <script src="api-shim.js"></script>
-        <script src="app.js"></script>
-        <script src="drive.js"></script>
+                <section data-nx-sec="eng" hidden>
+                    <h1 style="font-size:20px;margin:2px 0 12px">Инженерный раздел · диагностика и API</h1>
+                    <div class="nx-card">
+                        <div class="nx-toolbar">
+                            <button type="button" class="nx-btn" id="nx-eng-ping">Проверить связь</button>
+                            <button type="button" class="nx-btn" id="nx-eng-schema">Получить словарь API</button>
+                            <span class="nx-mono" id="nx-eng-api-result" role="status"></span>
+                        </div>
+                        <p class="nx-h" style="margin-top:16px">Метрики и состояния датчиков</p>
+                        <pre class="nx-code" id="nx-eng-metrics">Состояние пока не получено</pre>
+                        <p class="nx-h" style="margin-top:16px">Полный JSON состояния</p>
+                        <pre class="nx-code" id="nx-eng-state">Состояние пока не получено</pre>
+                        <p class="nx-h" style="margin-top:16px">Subjects и KV-ключи NATS</p>
+                        <pre class="nx-code" id="nx-eng-subjects">—</pre>
+                        <p class="nx-h" style="margin-top:16px">Последний ответ API</p>
+                        <pre class="nx-code" id="nx-eng-last">Ответ команды появится здесь</pre>
+                    </div>
+                </section>
+
+                <footer class="nx-note" style="margin-top:20px">
+                    Новый интерфейс (редизайн) · логика робота и контракты NATS — без изменений ·
+                    классические страницы: <a href="/classic.html">консоль</a>, <a href="/map.html">карта</a>, <a href="/battery-history.html">история батареи</a>
+                </footer>
+            </main>
+        </div>
+        <script src="lib/nats-core.iife.js" defer></script>
+        <script src="config.js" defer></script>
+        <script src="nats-api-core.js" defer></script>
+        <script src="api-shim.js" defer></script>
+        <script src="lib/ol.js" defer></script>
+        <script src="lib/pako-inflate.js" defer></script>
+        <script src="lib/sha256.js" defer></script>
+        <script src="drive.js" defer></script>
+        <script src="next.js" defer></script>
     </body>
 </html>
